@@ -2,7 +2,20 @@
 
 *A lightweight Flask API for storing, searching and managing shell commands.*
 
-## Quick Start
+
+
+## Use the docker image:
+
+1. Install the `docker server` if you haven't already.
+2. Pull the `command-cli-image` image using the following command:
+   ```bash
+   docker pull ftsiadimos/command-cli-image:latest
+3. Use the image by running the following command:
+   ```bash
+   docker run -d --restart unless-stopped -p 5001:5001 --name=commnad-cli command-cli-image 
+4. Open URL in a web browser.
+
+## Manual install from code.
 
 ```bash
 git clone https://github.com/ftsiadimos/command-cli-repo
