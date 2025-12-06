@@ -1,0 +1,31 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="row">
+  <div class="col-md-12">
+    <h2>Command‑Library CLI Help</h2>
+    <p>This page documents the available sub‑commands for <code>repocomcli</code> (the renamed client). Each section shows the syntax and a brief description.</p>
+
+    <h3>1. <code>add</code> – Add a new command</h3>
+    <pre><code>repocomcli add command [-d description] [-t tags]</code></pre>
+    <p>Creates a new command entry. <code>-d</code> is optional and provides a description. <code>-t</code> accepts a comma‑separated list of tags.</p>
+
+    <h3>2. <code>list</code> – List commands</h3>
+    <pre><code>repocomcli list [-s search]</code></pre>
+    <p>Displays a paginated table of commands. <code>-s</code> filters by text in any field. <code>-p</code> selects the page number; <code>-n</code> sets the number of rows per page.</p>
+
+    <h3>3. <code>show</code> – Show a command by ID</h3>
+    <pre><code>repocomcli show id</code></pre>
+    <p>Retrieves and prints the full details of the command with the given numeric ID.</p>
+
+    <h3>4. <code>config</code> – Manage API connection settings</h3>
+    <pre><code>repocomcli config set host [--port port]</code></pre>
+    <p>Stores the API host (and optional port) in the local configuration file.</p>
+    <pre><code>repocomcli config get</code></pre>
+    <p>Displays the currently stored API base URL.</p>
+
+    <h3>5. <code>help</code> – Show this help page</h3>
+    <pre><code>repocomcli help</code></pre>
+    <p>Displays this help page in the browser.</p>
+  </div>
+</div>
+{% endblock %}

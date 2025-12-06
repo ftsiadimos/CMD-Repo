@@ -1,0 +1,277 @@
+#!/usr/bin/env python3
+"""
+Simple command‑line client for the Command‑Library API.
+Created by Fotios Tsiadimos.
+"""
+
+import argparse
+import json
+import os
+import sys
+import textwrap   # <--- added import
+import urllib.parse   # <--- new import for URL handling
+from typing import Optional
+
+import requests # type: ignore
+
+# ----------------------------------------------------------------------
+# Configuration handling
+# ----------------------------------------------------------------------
+CONFIG_DIR = os.path.expanduser("~/.config/command-cli")
+CONFIG_FILE = os.path.join(CONFIG_DIR, "config.json")
+DEFAULT_API_BASE = "http://127.0.0.1:5000/api/commands"
+
+def load_config():
+    """Return the config dict, creating defaults if necessary."""
+    if not os.path.exists(CONFIG_FILE):
+        return {}
+    try:
+        with open(CONFIG_FILE, "r") as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+def save_config(cfg):
+    """Persist the config dict to disk."""
+    os.makedirs(CONFIG_DIR, exist_ok=True)
+    with open(CONFIG_FILE, "w") as f:
+        json.dump(cfg, f, indent=2)
+
+def _build_api_base(host_url: str, port: Optional[int]) -> str:
+    """
+    Build the full API base URL from a host (with optional scheme) and an optional port.
+    Guarantees the URL ends with ``/api/commands``.
+    """
+    # Ensure a scheme is present
+    if not host_url.startswith(("http://", "https://")):
+        host_url = "http://" + host_url
+
+    parsed = urllib.parse.urlparse(host_url)
+    netloc = parsed.hostname
+    if port:
+        netloc = f"{netloc}:{port}"
+    else:
+        # Preserve any existing port from the supplied URL
+        if parsed.port:
+            netloc = f"{netloc}:{parsed.port}"
+        else:
+            netloc = f"{netloc}:5000"   # default port
+
+    # Re‑assemble the URL with the required path
+    return urllib.parse.urlunparse((
+        parsed.scheme,
+        netloc,
+        "/api/commands",
+        "", "", ""
+    ))
+
+def _ensure_scheme(url):
+    """Legacy helper – kept for backward compatibility."""
+    # If the user supplied a full URL (including scheme), just return it.
+    # Otherwise, treat it as a host and let ``_build_api_base`` add defaults.
+    if url.startswith(("http://", "https://")):
+        return url
+    return "http://" + url + ":5000/api/commands"
+
+# Load config
+config = load_config()
+# Determine host part and optional port from config
+host_part = config.get("api_base", DEFAULT_API_BASE)
+port_part = config.get("port")   # may be None
+API_BASE = _build_api_base(host_part, port_part)
+
+# ----------------------------------------------------------------------
+# API helpers
+# ----------------------------------------------------------------------
+def add_command(command, description=None, tags=None):
+    """POST a new command to the API."""
+    payload = {"command": command}
+    if description:
+        payload["description"] = description
+    if tags:
+        payload["tags"] = tags
+
+    try:
+        resp = requests.post(API_BASE, json=payload)
+    except requests.exceptions.ConnectionError:
+        print("❌  Cannot connect to the API server. Please set the correct URL and port using 'config set'.")
+        return
+
+    if resp.status_code == 201:
+        data = resp.json()
+        print(f"✅  Added command (id={data['id']}): {data['command']}")
+    else:
+        print(f"❌  Failed to add command: {resp.text}")
+
+def list_commands(search=None):
+    """GET a list of commands from the API and pretty‑print."""
+    params = {}
+    if search:
+        params["search"] = search
+
+    try:
+        resp = requests.get(API_BASE, params=params)
+    except requests.exceptions.ConnectionError:
+        print("❌  Cannot connect to the API server. Please set the correct URL and port using 'config set'.")
+        return
+
+    if resp.status_code != 200:
+        print(f"❌  API error: {resp.text}")
+        return
+
+    commands = resp.json()
+    if not commands:
+        print("📭  No commands found.")
+        return
+
+    # Pretty‑print a table
+    # Header colors
+    CYAN = "\033[36m"
+    RESET = "\033[0m"
+    header = f"{CYAN}{'ID':>4} | {'Command':40} | {'Description':30} | {'Tags':8} | {'Created'}{RESET}"
+    print(header)
+    print("-" * len(header))
+
+    for c in commands:
+        cmd = c["command"]
+        desc = c["description"] or ""
+        tags = c["tags"] or ""
+        created = c["created_at"][:10]  # keep only YYYY-MM-DD
+
+        # Wrap the command, description, and tags text
+        wrapped_cmd = textwrap.wrap(cmd, width=40)
+        # Keep only the first line of the command; add ellipsis if truncated
+        if len(wrapped_cmd) > 1:
+            wrapped_cmd = [wrapped_cmd[0] + '…']
+        wrapped_desc = textwrap.wrap(desc[:300], width=29)  # truncate to 30 chars before wrapping
+        # Keep only the first line of the description; add ellipsis if truncated
+        if len(wrapped_desc) > 1:
+            wrapped_desc = [wrapped_desc[0] + '…']
+        wrapped_tags = textwrap.wrap(tags, width=8)
+
+        # Determine how many lines we need to print
+        max_lines = max(len(wrapped_cmd), len(wrapped_desc), len(wrapped_tags))
+
+        for i in range(max_lines):
+            # ID only on the first line
+            id_part = f"{c['id']:>4}" if i == 0 else " " * 4
+
+            # Command column
+            cmd_part = wrapped_cmd[i] if i < len(wrapped_cmd) else ""
+
+            # Description column
+            desc_part = wrapped_desc[i] if i < len(wrapped_desc) else ""
+
+            # Tags column (wrap if necessary)
+            tags_part = wrapped_tags[i] if i < len(wrapped_tags) else ""
+
+            # Created only on the first line
+            created_part = created if i == 0 else " " * 19
+
+            print(f"{id_part} | {cmd_part:<40} | {desc_part:<30} | {tags_part:<8} | {created_part}")
+
+def show_command(cmd_id: int):
+    """Retrieve and display a single command by ID via the API."""
+    try:
+        resp = requests.get(f"{API_BASE}/{cmd_id}")
+    except requests.exceptions.ConnectionError:
+        print("❌  Cannot connect to the API server. Please set the correct URL and port using 'config set'.")
+        return
+    if resp.status_code != 200:
+        try:
+            err = resp.json()
+            msg = err.get("error", resp.text)
+        except Exception:
+            msg = resp.text
+        print(f"❌  Command with ID {cmd_id} not found: {msg}")
+        return
+    try:
+        cmd = resp.json()
+    except Exception:
+        print(f"❌  Unexpected response format for ID {cmd_id}: {resp.text}")
+        return
+    # ANSI color codes
+    RED = "\033[31m"
+    GREEN = "\033[32m"
+    YELLOW = "\033[33m"
+    BLUE = "\033[34m"
+    RESET = "\033[0m"
+
+    print(f"{RED}ID:{RESET} {cmd.get('id')}")
+    print(f"{GREEN}Command:{RESET} {cmd.get('command')}")
+    print(f"{YELLOW}Description:{RESET} {cmd.get('description', '')}")
+    print(f"{BLUE}Tags:{RESET} {cmd.get('tags', '')}")
+    print(f"{YELLOW}Created:{RESET} {cmd.get('created_at', '')}")
+
+# ----------------------------------------------------------------------
+# CLI argument parsing
+# ----------------------------------------------------------------------
+def main():
+    global API_BASE
+    parser = argparse.ArgumentParser(description="Command‑Library API client")
+    sub = parser.add_subparsers(dest="cmd", required=True)
+
+    # ----- add -----
+    p_add = sub.add_parser("add", help="Add a new shell command")
+    p_add.add_argument("command", help="The raw shell command string")
+    p_add.add_argument("-d", "--description", help="Optional description")
+    p_add.add_argument("-t", "--tags", help="Optional comma‑separated tags")
+
+    # ----- list -----
+    p_list = sub.add_parser("list", help="List all stored commands")
+    p_list.add_argument("-s", "--search", help="Optional search term")
+
+    # ----- show -----
+    p_show = sub.add_parser("show", help="Show full command and description for a given ID")
+    p_show.add_argument("id", type=int, help="The command ID to display")
+
+    # ----- config -----
+    p_cfg = sub.add_parser("config", help="View or change client configuration")
+    cfg_sub = p_cfg.add_subparsers(dest="action", required=True)
+
+    # config set
+    p_cfg_set = cfg_sub.add_parser("set", help="Set the API base URL (and optionally the port)")
+    p_cfg_set.add_argument("url", help="Host part of the API endpoint (e.g. 127.0.0.1)")
+    p_cfg_set.add_argument(
+        "--port",
+        type=int,
+        help="Port number for the API (default: 5000 if omitted)",
+    )
+
+    # config get
+    cfg_sub.add_parser("get", help="Show the currently stored API base URL")
+
+    args = parser.parse_args()
+
+    global API_BASE
+    if args.cmd == "add":
+        add_command(args.command, args.description, args.tags)
+    elif args.cmd == "list":
+        list_commands(args.search)
+    elif args.cmd == "show":
+        show_command(args.id)
+    elif args.cmd == "config":
+        if args.action == "set":
+            # Validate host part
+            if not args.url:
+                print("❌  Hostname is required when setting the API base URL.")
+                return
+            # Port is mandatory for this tool
+            if args.port is None:
+                print("❌  Port is required when setting the API base URL.")
+                return
+            if args.port <= 0:
+                print("❌  Port must be a positive integer.")
+                return
+            # Store the host URL (without scheme) and port
+            config["api_base"] = args.url
+            config["port"] = args.port
+            save_config(config)
+            # Re‑compute API_BASE for the current run
+            API_BASE = _build_api_base(config["api_base"], config.get("port"))
+            print(f"✅  API base URL updated to: {API_BASE}")
+        elif args.action == "get":
+            print(f"Current API base URL: {API_BASE}")
+
+if __name__ == "__main__":
+    main()

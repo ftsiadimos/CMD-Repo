@@ -1,0 +1,10 @@
+services:
+  web:
+    build: ./
+    image: command-cli-image
+    restart: unless-stopped
+    ports:
+      - 5001:5001
+    volumes:
+      - ./:/instance/
+    command: /usr/local/bin/gunicorn -b :5001 start:app
