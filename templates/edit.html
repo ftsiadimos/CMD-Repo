@@ -1,24 +1,65 @@
 {% extends "layout.html" %}
 {% block content %}
-<h2>Edit Command</h2>
-<form method="post">
-  {{ form.hidden_tag() }}
-  <div class="mb-3">
-    {{ form.command.label(class="form-label") }}
-    {{ form.command(class="form-control") }}
-    {% for error in form.command.errors %}
-      <div class="text-danger">{{ error }}</div>
-    {% endfor %}
+<div class="row justify-content-center">
+  <div class="col-lg-8 col-md-10">
+    <div class="card shadow-sm">
+      <div class="card-header bg-warning text-dark">
+        <h4 class="mb-0"><i class="bi bi-pencil-square me-2"></i>Edit Command</h4>
+      </div>
+      <div class="card-body">
+        <form method="post" novalidate>
+          {{ form.hidden_tag() }}
+          
+          <div class="mb-3">
+            {{ form.command.label(class="form-label fw-semibold") }}
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-terminal"></i></span>
+              {{ form.command(class="form-control font-monospace", autocomplete="off") }}
+            </div>
+            {% for error in form.command.errors %}
+              <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle me-1"></i>{{ error }}</div>
+            {% endfor %}
+          </div>
+          
+          <div class="mb-3">
+            {{ form.description.label(class="form-label fw-semibold") }}
+            {{ form.description(class="form-control", rows=4) }}
+          </div>
+          
+          <div class="mb-4">
+            {{ form.tags.label(class="form-label fw-semibold") }}
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-tags"></i></span>
+              {{ form.tags(class="form-control") }}
+            </div>
+            <div class="form-text">Comma-separated tags for easier searching.</div>
+          </div>
+          
+          <div class="d-flex gap-2 flex-wrap">
+            <button type="submit" class="btn btn-warning">
+              <i class="bi bi-check-lg me-1"></i>{{ form.submit.label.text }}
+            </button>
+            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+              <i class="bi bi-x-lg me-1"></i>Cancel
+            </a>
+          </div>
+        </form>
+        
+        <hr class="my-4">
+        
+        <div class="d-flex justify-content-between align-items-center">
+          <small class="text-muted">
+            <i class="bi bi-clock me-1"></i>Created: {{ command.created_at.strftime('%Y-%m-%d %H:%M') }}
+          </small>
+          <form action="{{ url_for('delete', cmd_id=command.id) }}" method="post" class="d-inline">
+            <button type="submit" class="btn btn-outline-danger btn-sm" 
+                    onclick="return confirm('Are you sure you want to delete this command?');">
+              <i class="bi bi-trash me-1"></i>Delete Command
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
   </div>
-  <div class="mb-3">
-    {{ form.description.label(class="form-label") }}
-    {{ form.description(class="form-control", rows=3) }}
-  </div>
-  <div class="mb-3">
-    {{ form.tags.label(class="form-label") }}
-    {{ form.tags(class="form-control") }}
-  </div>
-  <button type="submit" class="btn btn-primary">{{ form.submit.label.text }}</button>
-  <a href="{{ url_for('index') }}" class="btn btn-secondary">Cancel</a>
-</form>
+</div>
 {% endblock %}

@@ -11,9 +11,8 @@ def create_app():
     # Initialize extensions
     db.init_app(app)
 
-    # Create DB tables on first run
-    @app.before_request
-    def create_tables():
+    # Create DB tables once at startup (not on every request)
+    with app.app_context():
         db.create_all()
 
 
@@ -82,24 +81,24 @@ def create_app():
         # -----------------------------------------------------------------
     @app.route("/api/commands/<int:cmd_id>", methods=["GET"])
     def api_get_command(cmd_id):
-            """Return a single command by its ID.
+        """Return a single command by its ID.
 
-            Returns a JSON object with the same fields as the list endpoint.
-            If the command does not exist, a 404 error with a JSON error message
-            is returned.
-            """
-            cmd = Command.query.get(cmd_id)
-            if not cmd:
-                return jsonify({"error": f"Command with ID {cmd_id} not found."}), 404
-            return jsonify(
-                {
-                    "id": cmd.id,
-                    "command": cmd.command,
-                    "description": cmd.description,
-                    "tags": cmd.tags,
-                    "created_at": cmd.created_at.isoformat(),
-                }
-            ), 200
+        Returns a JSON object with the same fields as the list endpoint.
+        If the command does not exist, a 404 error with a JSON error message
+        is returned.
+        """
+        cmd = db.session.get(Command, cmd_id)
+        if not cmd:
+            return jsonify({"error": f"Command with ID {cmd_id} not found."}), 404
+        return jsonify(
+            {
+                "id": cmd.id,
+                "command": cmd.command,
+                "description": cmd.description,
+                "tags": cmd.tags,
+                "created_at": cmd.created_at.isoformat(),
+            }
+        ), 200
 
 
     # ---------- Routes ----------
@@ -147,14 +146,14 @@ def create_app():
 
         total = query.count()
         total_pages = (total + per_page - 1) // per_page if per_page else 1
-        tag_rows = Command.query.with_entities(Command.tags).all()
-        unique_tags = set()
-        for row in tag_rows:
-            if not row[0]:
-                continue
-            for tag in [t.strip() for t in row[0].split(",") if t.strip()]:
-                unique_tags.add(tag)
-        total_tags = unique_tags
+        # Optimized: single pass with set comprehension
+        tag_rows = Command.query.with_entities(Command.tags).filter(Command.tags.isnot(None)).all()
+        total_tags = {
+            tag.strip()
+            for row in tag_rows
+            for tag in row[0].split(",")
+            if tag.strip()
+        }
        
         commands = (
             query
@@ -230,19 +229,86 @@ def create_app():
         """Render the CLI help page."""
         return render_template("help.html")
 
-    @app.route('/backup')
-    def backup():
-        """Send the SQLite database file as a download."""
-        db_path = os.path.join(current_app.root_path, 'instance/app.db')
-        if not os.path.isfile(db_path):
-            abort(404, description="Database file not found")
-        # `as_attachment=True` forces a download dialog
-        return send_from_directory(
-            directory=os.path.dirname(db_path),
-            path=os.path.basename(db_path),
-            as_attachment=True,
-            download_name='app.db'
-        )
+    @app.route('/export-json')
+    def export_json():
+        """Export all commands as a JSON file."""
+        commands = Command.query.order_by(Command.created_at.desc()).all()
+        data = [
+            {
+                "id": cmd.id,
+                "command": cmd.command,
+                "description": cmd.description,
+                "tags": cmd.tags,
+                "created_at": cmd.created_at.isoformat() if cmd.created_at else None,
+            }
+            for cmd in commands
+        ]
+        response = jsonify(data)
+        response.headers['Content-Disposition'] = 'attachment; filename=commands_backup.json'
+        response.headers['Content-Type'] = 'application/json'
+        return response
+
+    @app.route('/import-json', methods=['GET', 'POST'])
+    def import_json():
+        """Import commands from a JSON file."""
+        if request.method == 'POST':
+            if 'file' not in request.files:
+                flash('No file selected.', 'danger')
+                return redirect(url_for('import_json'))
+            
+            file = request.files['file']
+            if file.filename == '':
+                flash('No file selected.', 'danger')
+                return redirect(url_for('import_json'))
+            
+            if not file.filename.endswith('.json'):
+                flash('Please upload a JSON file.', 'danger')
+                return redirect(url_for('import_json'))
+            
+            try:
+                import json
+                from datetime import datetime, timezone
+                
+                data = json.load(file)
+                if not isinstance(data, list):
+                    flash('Invalid JSON format. Expected a list of commands.', 'danger')
+                    return redirect(url_for('import_json'))
+                
+                imported_count = 0
+                skipped_count = 0
+                
+                for item in data:
+                    if not isinstance(item, dict) or 'command' not in item:
+                        skipped_count += 1
+                        continue
+                    
+                    # Check if command already exists
+                    existing = Command.query.filter_by(command=item['command']).first()
+                    if existing:
+                        skipped_count += 1
+                        continue
+                    
+                    cmd = Command(
+                        command=item['command'].strip(),
+                        description=item.get('description', '').strip() if item.get('description') else None,
+                        tags=item.get('tags', '').strip() if item.get('tags') else None,
+                    )
+                    db.session.add(cmd)
+                    imported_count += 1
+                
+                db.session.commit()
+                flash(f'Successfully imported {imported_count} commands. Skipped {skipped_count} (duplicates or invalid).', 'success')
+                return redirect(url_for('index'))
+                
+            except json.JSONDecodeError:
+                flash('Invalid JSON file. Please check the file format.', 'danger')
+                return redirect(url_for('import_json'))
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Error importing file: {str(e)}', 'danger')
+                return redirect(url_for('import_json'))
+        
+        return render_template('import.html')
 
     return app
 

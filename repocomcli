@@ -1,277 +1,594 @@
-#!/usr/bin/env python3
-"""
-Simple command‑line client for the Command‑Library API.
-Created by Fotios Tsiadimos.
-"""
+#!/usr/bin/env bash
+#
+# repocomcli - Command-Library CLI client
+# Created by Fotios Tsiadimos
+#
+# Usage:
+#   repocomcli add "command" [-d description] [-t tags]
+#   repocomcli list [-s search] [-n limit]
+#   repocomcli show <id>
+#   repocomcli copy <id>
+#   repocomcli export <file.json>
+#   repocomcli import <file.json>
+#   repocomcli config set <host> [--port <port>]
+#   repocomcli config get
+#
 
-import argparse
-import json
-import os
-import sys
-import textwrap   # <--- added import
-import urllib.parse   # <--- new import for URL handling
-from typing import Optional
+set -euo pipefail
 
-import requests # type: ignore
-
-# ----------------------------------------------------------------------
-# Configuration handling
-# ----------------------------------------------------------------------
-CONFIG_DIR = os.path.expanduser("~/.config/command-cli")
-CONFIG_FILE = os.path.join(CONFIG_DIR, "config.json")
-DEFAULT_API_BASE = "http://127.0.0.1:5000/api/commands"
-
-def load_config():
-    """Return the config dict, creating defaults if necessary."""
-    if not os.path.exists(CONFIG_FILE):
-        return {}
-    try:
-        with open(CONFIG_FILE, "r") as f:
-            return json.load(f)
-    except Exception:
-        return {}
-
-def save_config(cfg):
-    """Persist the config dict to disk."""
-    os.makedirs(CONFIG_DIR, exist_ok=True)
-    with open(CONFIG_FILE, "w") as f:
-        json.dump(cfg, f, indent=2)
-
-def _build_api_base(host_url: str, port: Optional[int]) -> str:
-    """
-    Build the full API base URL from a host (with optional scheme) and an optional port.
-    Guarantees the URL ends with ``/api/commands``.
-    """
-    # Ensure a scheme is present
-    if not host_url.startswith(("http://", "https://")):
-        host_url = "http://" + host_url
-
-    parsed = urllib.parse.urlparse(host_url)
-    netloc = parsed.hostname
-    if port:
-        netloc = f"{netloc}:{port}"
-    else:
-        # Preserve any existing port from the supplied URL
-        if parsed.port:
-            netloc = f"{netloc}:{parsed.port}"
-        else:
-            netloc = f"{netloc}:5000"   # default port
-
-    # Re‑assemble the URL with the required path
-    return urllib.parse.urlunparse((
-        parsed.scheme,
-        netloc,
-        "/api/commands",
-        "", "", ""
-    ))
-
-def _ensure_scheme(url):
-    """Legacy helper – kept for backward compatibility."""
-    # If the user supplied a full URL (including scheme), just return it.
-    # Otherwise, treat it as a host and let ``_build_api_base`` add defaults.
-    if url.startswith(("http://", "https://")):
-        return url
-    return "http://" + url + ":5000/api/commands"
-
-# Load config
-config = load_config()
-# Determine host part and optional port from config
-host_part = config.get("api_base", DEFAULT_API_BASE)
-port_part = config.get("port")   # may be None
-API_BASE = _build_api_base(host_part, port_part)
+VERSION="1.2.0"
 
 # ----------------------------------------------------------------------
-# API helpers
+# Colors (auto-disable if not a TTY)
 # ----------------------------------------------------------------------
-def add_command(command, description=None, tags=None):
-    """POST a new command to the API."""
-    payload = {"command": command}
-    if description:
-        payload["description"] = description
-    if tags:
-        payload["tags"] = tags
-
-    try:
-        resp = requests.post(API_BASE, json=payload)
-    except requests.exceptions.ConnectionError:
-        print("❌  Cannot connect to the API server. Please set the correct URL and port using 'config set'.")
-        return
-
-    if resp.status_code == 201:
-        data = resp.json()
-        print(f"✅  Added command (id={data['id']}): {data['command']}")
-    else:
-        print(f"❌  Failed to add command: {resp.text}")
-
-def list_commands(search=None):
-    """GET a list of commands from the API and pretty‑print."""
-    params = {}
-    if search:
-        params["search"] = search
-
-    try:
-        resp = requests.get(API_BASE, params=params)
-    except requests.exceptions.ConnectionError:
-        print("❌  Cannot connect to the API server. Please set the correct URL and port using 'config set'.")
-        return
-
-    if resp.status_code != 200:
-        print(f"❌  API error: {resp.text}")
-        return
-
-    commands = resp.json()
-    if not commands:
-        print("📭  No commands found.")
-        return
-
-    # Pretty‑print a table
-    # Header colors
-    CYAN = "\033[36m"
-    RESET = "\033[0m"
-    header = f"{CYAN}{'ID':>4} | {'Command':40} | {'Description':30} | {'Tags':8} | {'Created'}{RESET}"
-    print(header)
-    print("-" * len(header))
-
-    for c in commands:
-        cmd = c["command"]
-        desc = c["description"] or ""
-        tags = c["tags"] or ""
-        created = c["created_at"][:10]  # keep only YYYY-MM-DD
-
-        # Wrap the command, description, and tags text
-        wrapped_cmd = textwrap.wrap(cmd, width=40)
-        # Keep only the first line of the command; add ellipsis if truncated
-        if len(wrapped_cmd) > 1:
-            wrapped_cmd = [wrapped_cmd[0] + '…']
-        wrapped_desc = textwrap.wrap(desc[:300], width=29)  # truncate to 30 chars before wrapping
-        # Keep only the first line of the description; add ellipsis if truncated
-        if len(wrapped_desc) > 1:
-            wrapped_desc = [wrapped_desc[0] + '…']
-        wrapped_tags = textwrap.wrap(tags, width=8)
-
-        # Determine how many lines we need to print
-        max_lines = max(len(wrapped_cmd), len(wrapped_desc), len(wrapped_tags))
-
-        for i in range(max_lines):
-            # ID only on the first line
-            id_part = f"{c['id']:>4}" if i == 0 else " " * 4
-
-            # Command column
-            cmd_part = wrapped_cmd[i] if i < len(wrapped_cmd) else ""
-
-            # Description column
-            desc_part = wrapped_desc[i] if i < len(wrapped_desc) else ""
-
-            # Tags column (wrap if necessary)
-            tags_part = wrapped_tags[i] if i < len(wrapped_tags) else ""
-
-            # Created only on the first line
-            created_part = created if i == 0 else " " * 19
-
-            print(f"{id_part} | {cmd_part:<40} | {desc_part:<30} | {tags_part:<8} | {created_part}")
-
-def show_command(cmd_id: int):
-    """Retrieve and display a single command by ID via the API."""
-    try:
-        resp = requests.get(f"{API_BASE}/{cmd_id}")
-    except requests.exceptions.ConnectionError:
-        print("❌  Cannot connect to the API server. Please set the correct URL and port using 'config set'.")
-        return
-    if resp.status_code != 200:
-        try:
-            err = resp.json()
-            msg = err.get("error", resp.text)
-        except Exception:
-            msg = resp.text
-        print(f"❌  Command with ID {cmd_id} not found: {msg}")
-        return
-    try:
-        cmd = resp.json()
-    except Exception:
-        print(f"❌  Unexpected response format for ID {cmd_id}: {resp.text}")
-        return
-    # ANSI color codes
-    RED = "\033[31m"
-    GREEN = "\033[32m"
-    YELLOW = "\033[33m"
-    BLUE = "\033[34m"
-    RESET = "\033[0m"
-
-    print(f"{RED}ID:{RESET} {cmd.get('id')}")
-    print(f"{GREEN}Command:{RESET} {cmd.get('command')}")
-    print(f"{YELLOW}Description:{RESET} {cmd.get('description', '')}")
-    print(f"{BLUE}Tags:{RESET} {cmd.get('tags', '')}")
-    print(f"{YELLOW}Created:{RESET} {cmd.get('created_at', '')}")
+if [[ -t 1 ]]; then
+    RED=$'\033[31m'
+    GREEN=$'\033[32m'
+    YELLOW=$'\033[33m'
+    BLUE=$'\033[34m'
+    CYAN=$'\033[36m'
+    BOLD=$'\033[1m'
+    DIM=$'\033[2m'
+    RESET=$'\033[0m'
+else
+    RED='' GREEN='' YELLOW='' BLUE='' CYAN='' BOLD='' DIM='' RESET=''
+fi
 
 # ----------------------------------------------------------------------
-# CLI argument parsing
+# Configuration
 # ----------------------------------------------------------------------
-def main():
-    global API_BASE
-    parser = argparse.ArgumentParser(description="Command‑Library API client")
-    sub = parser.add_subparsers(dest="cmd", required=True)
+CONFIG_DIR="${HOME}/.config/command-cli"
+CONFIG_FILE="${CONFIG_DIR}/config.json"
+DEFAULT_HOST="127.0.0.1"
+DEFAULT_PORT="5000"
 
-    # ----- add -----
-    p_add = sub.add_parser("add", help="Add a new shell command")
-    p_add.add_argument("command", help="The raw shell command string")
-    p_add.add_argument("-d", "--description", help="Optional description")
-    p_add.add_argument("-t", "--tags", help="Optional comma‑separated tags")
+load_config() {
+    if [[ -f "$CONFIG_FILE" ]]; then
+        API_HOST=$(grep -oP '"api_base"\s*:\s*"\K[^"]+' "$CONFIG_FILE" 2>/dev/null || echo "$DEFAULT_HOST")
+        API_PORT=$(grep -oP '"port"\s*:\s*\K[0-9]+' "$CONFIG_FILE" 2>/dev/null || echo "$DEFAULT_PORT")
+    else
+        API_HOST="$DEFAULT_HOST"
+        API_PORT="$DEFAULT_PORT"
+    fi
+    # Remove any http:// prefix from host
+    API_HOST="${API_HOST#http://}"
+    API_HOST="${API_HOST#https://}"
+    API_BASE="http://${API_HOST}:${API_PORT}/api/commands"
+}
 
-    # ----- list -----
-    p_list = sub.add_parser("list", help="List all stored commands")
-    p_list.add_argument("-s", "--search", help="Optional search term")
+save_config() {
+    local host="$1"
+    local port="$2"
+    mkdir -p "$CONFIG_DIR"
+    cat > "$CONFIG_FILE" << EOF
+{
+  "api_base": "${host}",
+  "port": ${port}
+}
+EOF
+}
 
-    # ----- show -----
-    p_show = sub.add_parser("show", help="Show full command and description for a given ID")
-    p_show.add_argument("id", type=int, help="The command ID to display")
+# Load config on startup
+load_config
 
-    # ----- config -----
-    p_cfg = sub.add_parser("config", help="View or change client configuration")
-    cfg_sub = p_cfg.add_subparsers(dest="action", required=True)
+# ----------------------------------------------------------------------
+# Utility functions
+# ----------------------------------------------------------------------
+die() {
+    echo -e "${RED}❌  $1${RESET}" >&2
+    exit 1
+}
 
-    # config set
-    p_cfg_set = cfg_sub.add_parser("set", help="Set the API base URL (and optionally the port)")
-    p_cfg_set.add_argument("url", help="Host part of the API endpoint (e.g. 127.0.0.1)")
-    p_cfg_set.add_argument(
-        "--port",
-        type=int,
-        help="Port number for the API (default: 5000 if omitted)",
-    )
+success() {
+    echo -e "${GREEN}✅  $1${RESET}"
+}
 
-    # config get
-    cfg_sub.add_parser("get", help="Show the currently stored API base URL")
+warn() {
+    echo -e "${YELLOW}⚠️  $1${RESET}"
+}
 
-    args = parser.parse_args()
+info() {
+    echo -e "${CYAN}$1${RESET}"
+}
 
-    global API_BASE
-    if args.cmd == "add":
-        add_command(args.command, args.description, args.tags)
-    elif args.cmd == "list":
-        list_commands(args.search)
-    elif args.cmd == "show":
-        show_command(args.id)
-    elif args.cmd == "config":
-        if args.action == "set":
-            # Validate host part
-            if not args.url:
-                print("❌  Hostname is required when setting the API base URL.")
-                return
-            # Port is mandatory for this tool
-            if args.port is None:
-                print("❌  Port is required when setting the API base URL.")
-                return
-            if args.port <= 0:
-                print("❌  Port must be a positive integer.")
-                return
-            # Store the host URL (without scheme) and port
-            config["api_base"] = args.url
-            config["port"] = args.port
-            save_config(config)
-            # Re‑compute API_BASE for the current run
-            API_BASE = _build_api_base(config["api_base"], config.get("port"))
-            print(f"✅  API base URL updated to: {API_BASE}")
-        elif args.action == "get":
-            print(f"Current API base URL: {API_BASE}")
+# Check if curl is available
+check_curl() {
+    command -v curl &>/dev/null || die "curl is required but not installed."
+}
 
-if __name__ == "__main__":
-    main()
+# Check if jq is available (optional but recommended)
+has_jq() {
+    command -v jq &>/dev/null
+}
+
+# API request wrapper
+api_request() {
+    local method="$1"
+    local endpoint="${2:-}"
+    local data="${3:-}"
+    local url="${API_BASE}${endpoint}"
+    
+    local curl_opts=(-s --connect-timeout 10)
+    
+    if [[ "$method" == "POST" && -n "$data" ]]; then
+        curl_opts+=(-X POST -H "Content-Type: application/json" -d "$data")
+    elif [[ "$method" == "GET" ]]; then
+        curl_opts+=(-X GET)
+    fi
+    
+    local body http_code
+    body=$(curl "${curl_opts[@]}" -w $'\n%{http_code}' "$url" 2>/dev/null) || {
+        die "Cannot connect to API server at ${API_BASE}\n   Use 'repocomcli config set <host> --port <port>' to configure."
+    }
+    
+    # Extract http_code from last line
+    http_code=$(tail -n1 <<< "$body")
+    # Remove last line to get actual body
+    body=$(sed '$d' <<< "$body")
+    
+    echo "$http_code"
+    echo "$body"
+}
+
+# Truncate string with ellipsis
+truncate() {
+    local str="$1"
+    local max="$2"
+    if [[ ${#str} -gt $max ]]; then
+        echo "${str:0:$((max-1))}…"
+    else
+        echo "$str"
+    fi
+}
+
+# ----------------------------------------------------------------------
+# Commands
+# ----------------------------------------------------------------------
+
+cmd_add() {
+    local command="" description="" tags=""
+    
+    # Parse arguments
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            -d|--description)
+                description="$2"
+                shift 2
+                ;;
+            -t|--tags)
+                tags="$2"
+                shift 2
+                ;;
+            -*)
+                die "Unknown option: $1"
+                ;;
+            *)
+                if [[ -z "$command" ]]; then
+                    command="$1"
+                else
+                    die "Unexpected argument: $1"
+                fi
+                shift
+                ;;
+        esac
+    done
+    
+    [[ -z "$command" ]] && die "Command is required.\nUsage: repocomcli add \"command\" [-d description] [-t tags]"
+    
+    # Build JSON payload (escape special characters)
+    local json
+    if has_jq; then
+        json=$(jq -n \
+            --arg cmd "$command" \
+            --arg desc "$description" \
+            --arg tags "$tags" \
+            '{command: $cmd, description: $desc, tags: $tags}')
+    else
+        json=$(printf '{"command":"%s","description":"%s","tags":"%s"}' \
+            "$(echo "$command" | sed 's/\\/\\\\/g; s/"/\\"/g')" \
+            "$(echo "$description" | sed 's/\\/\\\\/g; s/"/\\"/g')" \
+            "$(echo "$tags" | sed 's/\\/\\\\/g; s/"/\\"/g')")
+    fi
+    
+    check_curl
+    local result http_code body
+    result=$(api_request "POST" "" "$json")
+    http_code=$(head -n1 <<< "$result")
+    body=$(tail -n +2 <<< "$result")
+    
+    if [[ "$http_code" == "201" ]]; then
+        local id
+        if has_jq; then
+            id=$(echo "$body" | jq -r '.id')
+        else
+            id=$(echo "$body" | grep -oP '"id"\s*:\s*\K[0-9]+' || echo "?")
+        fi
+        success "Added command (id=${id})"
+        echo -e "   ${CYAN}${command}${RESET}"
+    else
+        die "Failed to add command: $body"
+    fi
+}
+
+cmd_list() {
+    local search="" limit=""
+    
+    # Parse arguments
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            -s|--search)
+                search="$2"
+                shift 2
+                ;;
+            -n|--limit)
+                limit="$2"
+                shift 2
+                ;;
+            *)
+                die "Unknown option: $1"
+                ;;
+        esac
+    done
+    
+    check_curl
+    
+    local url=""
+    [[ -n "$search" ]] && url="?search=$(echo "$search" | sed 's/ /%20/g')"
+    
+    local result http_code body
+    result=$(api_request "GET" "$url")
+    http_code=$(head -n1 <<< "$result")
+    body=$(tail -n +2 <<< "$result")
+    
+    [[ "$http_code" != "200" ]] && die "API error: $body"
+    
+    # Check if empty
+    if [[ "$body" == "[]" ]]; then
+        echo -e "${YELLOW}📭  No commands found.${RESET}"
+        return
+    fi
+    
+    # Parse and display
+    local cmd_width=40
+    local desc_width=30
+    
+    # Header
+    echo -e "${CYAN}${BOLD}  ID │ Command                                  │ Description                    │ Tags         │ Created${RESET}"
+    echo -e "${DIM}─────┼──────────────────────────────────────────┼────────────────────────────────┼──────────────┼────────────${RESET}"
+    
+    local count=0
+    if has_jq; then
+        local total
+        total=$(echo "$body" | jq 'length')
+        
+        while IFS= read -r line; do
+            [[ -n "$limit" && $count -ge $limit ]] && break
+            
+            local id cmd desc tags created
+            id=$(echo "$line" | jq -r '.id')
+            cmd=$(echo "$line" | jq -r '.command // ""' | tr '\n\r\t' '   ' | tr -s ' ')
+            desc=$(echo "$line" | jq -r '.description // ""' | tr '\n\r\t' '   ' | tr -s ' ')
+            tags=$(echo "$line" | jq -r '.tags // ""' | tr '\n\r\t' '   ')
+            created=$(echo "$line" | jq -r '.created_at // ""' | cut -c1-10)
+            
+            # Truncate fields
+            [[ ${#cmd} -gt 40 ]] && cmd="${cmd:0:39}…"
+            [[ ${#desc} -gt 30 ]] && desc="${desc:0:29}…"
+            [[ ${#tags} -gt 12 ]] && tags="${tags:0:11}…"
+            
+            printf "%s%4s%s │ %s%-40s%s │ %-30s │ %s%-12s%s │ %s%s%s\n" \
+                "$BOLD" "$id" "$RESET" \
+                "$GREEN" "$cmd" "$RESET" \
+                "$desc" \
+                "$BLUE" "$tags" "$RESET" \
+                "$DIM" "$created" "$RESET"
+            
+            ((count++)) || true
+        done < <(echo "$body" | jq -c '.[]')
+        
+        echo -e "\n${DIM}Total: ${count} command(s)${RESET}"
+    else
+        # Fallback without jq (basic parsing)
+        warn "Install 'jq' for better output formatting."
+        echo "$body"
+    fi
+}
+
+cmd_show() {
+    local id="${1:-}"
+    [[ -z "$id" ]] && die "ID is required.\nUsage: repocomcli show <id>"
+    
+    check_curl
+    local result http_code body
+    result=$(api_request "GET" "/$id")
+    http_code=$(head -n1 <<< "$result")
+    body=$(tail -n +2 <<< "$result")
+    
+    [[ "$http_code" != "200" ]] && die "Command with ID $id not found."
+    
+    if has_jq; then
+        local cmd desc tags created
+        cmd=$(echo "$body" | jq -r '.command')
+        desc=$(echo "$body" | jq -r '.description // "none"')
+        tags=$(echo "$body" | jq -r '.tags // "none"')
+        created=$(echo "$body" | jq -r '.created_at // ""')
+        
+        echo -e "\n${BOLD}╭────────────────────────────────────────────────────────────╮${RESET}"
+        echo -e "${BOLD}│${RESET} ${CYAN}Command #${id}${RESET}"
+        echo -e "${BOLD}├────────────────────────────────────────────────────────────┤${RESET}"
+        echo -e "${BOLD}│${RESET} ${GREEN}${BOLD}\$ ${cmd}${RESET}"
+        if [[ "$desc" != "none" && -n "$desc" && "$desc" != "null" ]]; then
+            echo -e "${BOLD}├────────────────────────────────────────────────────────────┤${RESET}"
+            # Word wrap description
+            echo "$desc" | fold -s -w 58 | while IFS= read -r line; do
+                echo -e "${BOLD}│${RESET} ${line}"
+            done
+        fi
+        echo -e "${BOLD}├────────────────────────────────────────────────────────────┤${RESET}"
+        echo -e "${BOLD}│${RESET} ${BLUE}Tags:${RESET} ${tags}"
+        echo -e "${BOLD}│${RESET} ${DIM}Created: ${created}${RESET}"
+        echo -e "${BOLD}╰────────────────────────────────────────────────────────────╯${RESET}\n"
+    else
+        echo "$body"
+    fi
+}
+
+cmd_copy() {
+    local id="${1:-}"
+    [[ -z "$id" ]] && die "ID is required.\nUsage: repocomcli copy <id>"
+    
+    check_curl
+    local result http_code body
+    result=$(api_request "GET" "/$id")
+    http_code=$(head -n1 <<< "$result")
+    body=$(tail -n +2 <<< "$result")
+    
+    [[ "$http_code" != "200" ]] && die "Command with ID $id not found."
+    
+    local cmd
+    if has_jq; then
+        cmd=$(echo "$body" | jq -r '.command')
+    else
+        cmd=$(echo "$body" | grep -oP '"command"\s*:\s*"\K[^"]+' || echo "")
+    fi
+    
+    [[ -z "$cmd" ]] && die "Could not extract command."
+    
+    local copied=false
+    
+    # Try different clipboard tools
+    if command -v xclip &>/dev/null; then
+        echo -n "$cmd" | xclip -selection clipboard && copied=true
+    elif command -v xsel &>/dev/null; then
+        echo -n "$cmd" | xsel --clipboard --input && copied=true
+    elif command -v wl-copy &>/dev/null; then
+        echo -n "$cmd" | wl-copy && copied=true
+    elif command -v pbcopy &>/dev/null; then
+        echo -n "$cmd" | pbcopy && copied=true
+    fi
+    
+    if $copied; then
+        success "Copied to clipboard:"
+        echo -e "   ${CYAN}${cmd}${RESET}"
+    else
+        warn "Could not copy to clipboard (no clipboard tool found)."
+        echo -e "${DIM}   Install xclip, xsel, or wl-copy.${RESET}"
+        echo -e "\n   ${GREEN}${cmd}${RESET}"
+    fi
+}
+
+cmd_export() {
+    local file="${1:-}"
+    [[ -z "$file" ]] && die "Filename is required.\nUsage: repocomcli export <file.json>"
+    
+    # Add .json extension if missing
+    [[ "$file" != *.json ]] && file="${file}.json"
+    
+    check_curl
+    local result http_code body
+    result=$(api_request "GET" "")
+    http_code=$(head -n1 <<< "$result")
+    body=$(tail -n +2 <<< "$result")
+    
+    [[ "$http_code" != "200" ]] && die "Failed to fetch commands: $body"
+    
+    if has_jq; then
+        echo "$body" | jq '.' > "$file"
+    else
+        echo "$body" > "$file"
+    fi
+    
+    local count
+    if has_jq; then
+        count=$(echo "$body" | jq 'length')
+    else
+        count="?"
+    fi
+    
+    success "Exported ${count} commands to ${file}"
+}
+
+cmd_import() {
+    local file="${1:-}"
+    [[ -z "$file" ]] && die "Filename is required.\nUsage: repocomcli import <file.json>"
+    [[ ! -f "$file" ]] && die "File not found: $file"
+    
+    check_curl
+    
+    local content
+    content=$(cat "$file")
+    
+    # Validate JSON
+    if has_jq; then
+        echo "$content" | jq '.' &>/dev/null || die "Invalid JSON file."
+    fi
+    
+    local imported=0 failed=0
+    
+    if has_jq; then
+        while IFS= read -r item; do
+            local cmd desc tags
+            cmd=$(echo "$item" | jq -r '.command // ""')
+            desc=$(echo "$item" | jq -r '.description // ""')
+            tags=$(echo "$item" | jq -r '.tags // ""')
+            
+            [[ -z "$cmd" ]] && { ((failed++)) || true; continue; }
+            
+            local json
+            json=$(jq -n \
+                --arg cmd "$cmd" \
+                --arg desc "$desc" \
+                --arg tags "$tags" \
+                '{command: $cmd, description: $desc, tags: $tags}')
+            
+            local result http_code
+            result=$(api_request "POST" "" "$json")
+            http_code=$(head -n1 <<< "$result")
+            
+            if [[ "$http_code" == "201" ]]; then
+                ((imported++)) || true
+            else
+                ((failed++)) || true
+            fi
+        done < <(echo "$content" | jq -c '.[]')
+    else
+        die "jq is required for import. Install it with: apt install jq"
+    fi
+    
+    success "Imported ${imported} commands."
+    [[ $failed -gt 0 ]] && warn "Skipped ${failed} commands (duplicates or invalid)."
+}
+
+cmd_config() {
+    local action="${1:-}"
+    shift || true
+    
+    case "$action" in
+        set)
+            local host="" port="$DEFAULT_PORT"
+            while [[ $# -gt 0 ]]; do
+                case "$1" in
+                    --port|-p)
+                        port="$2"
+                        shift 2
+                        ;;
+                    -*)
+                        die "Unknown option: $1"
+                        ;;
+                    *)
+                        host="$1"
+                        shift
+                        ;;
+                esac
+            done
+            
+            [[ -z "$host" ]] && die "Host is required.\nUsage: repocomcli config set <host> [--port <port>]"
+            [[ ! "$port" =~ ^[0-9]+$ ]] && die "Port must be a number."
+            
+            save_config "$host" "$port"
+            load_config
+            success "API configured: ${API_BASE}"
+            ;;
+        get)
+            info "API URL: ${API_BASE}"
+            ;;
+        *)
+            echo "Usage: repocomcli config <set|get>"
+            echo ""
+            echo "Commands:"
+            echo "  set <host> [--port <port>]  Set the API server address"
+            echo "  get                         Show current configuration"
+            ;;
+    esac
+}
+
+show_help() {
+    cat << EOF
+${BOLD}repocomcli${RESET} - Command-Library CLI client v${VERSION}
+
+${CYAN}USAGE:${RESET}
+    repocomcli <command> [options]
+
+${CYAN}COMMANDS:${RESET}
+    add <cmd> [-d desc] [-t tags]   Add a new command
+    list [-s search] [-n limit]     List all commands
+    show <id>                       Show command details
+    copy <id>                       Copy command to clipboard
+    export <file.json>              Export commands to JSON
+    import <file.json>              Import commands from JSON
+    config set <host> [--port N]    Configure API server
+    config get                      Show current API config
+
+${CYAN}OPTIONS:${RESET}
+    -h, --help      Show this help message
+    -v, --version   Show version number
+
+${CYAN}EXAMPLES:${RESET}
+    repocomcli add "docker ps -a" -d "List containers" -t "docker"
+    repocomcli list -s docker
+    repocomcli show 42
+    repocomcli copy 42
+    repocomcli export backup.json
+    repocomcli import backup.json
+    repocomcli config set 192.168.1.100 --port 5001
+
+${CYAN}ALIASES:${RESET}
+    ls      → list
+    cp      → copy
+    cfg     → config
+
+${CYAN}CURRENT CONFIG:${RESET}
+    API: ${API_BASE}
+
+${CYAN}REQUIREMENTS:${RESET}
+    curl    Required for API requests
+    jq      Recommended for JSON parsing (apt install jq)
+
+EOF
+}
+
+# ----------------------------------------------------------------------
+# Main
+# ----------------------------------------------------------------------
+main() {
+    local cmd="${1:-}"
+    shift || true
+    
+    case "$cmd" in
+        add)
+            cmd_add "$@"
+            ;;
+        list|ls)
+            cmd_list "$@"
+            ;;
+        show|get)
+            cmd_show "$@"
+            ;;
+        copy|cp)
+            cmd_copy "$@"
+            ;;
+        export)
+            cmd_export "$@"
+            ;;
+        import)
+            cmd_import "$@"
+            ;;
+        config|cfg)
+            cmd_config "$@"
+            ;;
+        -h|--help|help)
+            show_help
+            ;;
+        -v|--version|version)
+            echo "repocomcli version ${VERSION}"
+            ;;
+        "")
+            show_help
+            ;;
+        *)
+            die "Unknown command: $cmd\nRun 'repocomcli --help' for usage."
+            ;;
+    esac
+}
+
+main "$@"

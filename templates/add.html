@@ -1,24 +1,53 @@
 {% extends "layout.html" %}
 {% block content %}
-<h2>Add New Command</h2>
-<form method="post">
-  {{ form.hidden_tag() }}
-  <div class="mb-3">
-    {{ form.command.label(class="form-label") }}
-    {{ form.command(class="form-control") }}
-    {% for error in form.command.errors %}
-      <div class="text-danger">{{ error }}</div>
-    {% endfor %}
+<div class="row justify-content-center">
+  <div class="col-lg-8 col-md-10">
+    <div class="card shadow-sm">
+      <div class="card-header bg-primary text-white">
+        <h4 class="mb-0"><i class="bi bi-plus-circle me-2"></i>Add New Command</h4>
+      </div>
+      <div class="card-body">
+        <form method="post" novalidate>
+          {{ form.hidden_tag() }}
+          
+          <div class="mb-3">
+            {{ form.command.label(class="form-label fw-semibold") }}
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-terminal"></i></span>
+              {{ form.command(class="form-control font-monospace", placeholder="e.g., ls -la /var/log", autocomplete="off") }}
+            </div>
+            {% for error in form.command.errors %}
+              <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle me-1"></i>{{ error }}</div>
+            {% endfor %}
+            <div class="form-text">Enter the shell command you want to save.</div>
+          </div>
+          
+          <div class="mb-3">
+            {{ form.description.label(class="form-label fw-semibold") }}
+            {{ form.description(class="form-control", rows=4, placeholder="Describe what this command does...") }}
+            <div class="form-text">Optional: Add context or notes about the command.</div>
+          </div>
+          
+          <div class="mb-4">
+            {{ form.tags.label(class="form-label fw-semibold") }}
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-tags"></i></span>
+              {{ form.tags(class="form-control", placeholder="linux, networking, docker") }}
+            </div>
+            <div class="form-text">Optional: Comma-separated tags for easier searching.</div>
+          </div>
+          
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-check-lg me-1"></i>{{ form.submit.label.text }}
+            </button>
+            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+              <i class="bi bi-x-lg me-1"></i>Cancel
+            </a>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
-  <div class="mb-3">
-    {{ form.description.label(class="form-label") }}
-    {{ form.description(class="form-control", rows=3) }}
-  </div>
-  <div class="mb-3">
-    {{ form.tags.label(class="form-label") }}
-    {{ form.tags(class="form-control") }}
-  </div>
-  <button type="submit" class="btn btn-primary">{{ form.submit.label.text }}</button>
-  <a href="{{ url_for('index') }}" class="btn btn-secondary">Cancel</a>
-</form>
+</div>
 {% endblock %}
