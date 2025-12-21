@@ -1,119 +1,114 @@
-<!doctype html>
+<!DOCTYPE html>
+<!-- =============================================================================
+COMMAND REPOSITORY - BASE LAYOUT TEMPLATE
+==============================================================================
+File: templates/layout.html
+Purpose: Base HTML structure and styling for all pages in the application
+Framework: Jinja2 templating with Bootstrap 5 CSS framework
+Inheritance: Extended by all other templates (index.html, add.html, etc.)
+============================================================================== -->
 <html lang="en">
 <head>
+  <!-- ========================================
+  META TAGS - Browser and SEO Configuration
+  ======================================== -->
   <meta charset="utf-8">
+  <!-- Responsive viewport for mobile devices -->
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- SEO description for search engines -->
   <meta name="description" content="Shell Command Repository - Store and organize your CLI commands">
+
+  <!-- Page title - dynamically set by child templates -->
   <title>Shell Command Repo</title>
+
+  <!-- ========================================
+  FAVICON AND EXTERNAL RESOURCES
+  ======================================== -->
+  <!-- Site favicon/logo -->
   <link rel="icon" href="{{ url_for('static', filename='logo.png') }}">
+  <!-- Bootstrap 5 CSS framework from CDN -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons for consistent iconography -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
-  <style>
-    :root {
-      --primary-color: #0d6efd;
-      --transition-speed: 0.2s;
-    }
-    .btn-action {
-      width: 80px;
-      line-height: 1.5;
-    }
-    body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-    }
-    .container {
-      flex: 1;
-    }
-    footer {
-      flex-shrink: 0;
-    }
-    footer small {
-      font-weight: 600;
-      font-size: 1.1rem;
-    }
-    /* Smooth transitions */
-    .btn, .nav-link, .form-control, .form-select {
-      transition: all var(--transition-speed) ease;
-    }
-    /* Better focus states for accessibility */
-    .btn:focus, .form-control:focus, .form-select:focus, .nav-link:focus {
-      box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-      outline: none;
-    }
-    /* Nav icons */
-    .nav-link i {
-      margin-right: 0.35rem;
-    }
-    /* Active nav link */
-    .nav-link.active {
-      font-weight: 600;
-      border-bottom: 2px solid #fff;
-    }
-    /* Card hover effect */
-    .card {
-      transition: box-shadow var(--transition-speed) ease;
-    }
-    .card:hover {
-      box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-    }
-    /* Responsive adjustments */
-    @media (max-width: 576px) {
-      h1, h2 { font-size: 1.5rem; }
-      .btn-action { width: 65px; font-size: 0.85rem; }
-    }
-  </style>
+
+  <!-- Custom Stylesheet -->
+  <link href="{{ url_for('static', filename='styles.css') }}" rel="stylesheet">
+  <!-- Mobile Stylesheet -->
+  <link href="{{ url_for('static', filename='mobile.css') }}" rel="stylesheet">
 </head>
+
+<!-- ========================================
+HTML BODY - Main Application Layout
+======================================== -->
 <body class="bg-light">
+  <!-- ========================================
+  NAVIGATION BAR - Site-wide Navigation
+  ======================================== -->
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4 shadow-sm">
     <div class="container-fluid">
+      <!-- Brand/Logo Section -->
       <a class="navbar-brand d-flex align-items-center" href="{{ url_for('index') }}">
+        <!-- Site logo image -->
         <img src="{{ url_for('static', filename='logo.png') }}"
              alt="CMD Repo Logo"
              height="30"
              class="d-inline-block align-text-top me-2">
+        <!-- Site name text -->
         <span>CMD Repo</span>
       </a>
-      <!-- Mobile hamburger button -->
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" 
-              data-bs-target="#navbarNav" aria-controls="navbarNav" 
+
+      <!-- Mobile Navigation Toggle Button -->
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+              data-bs-target="#navbarNav" aria-controls="navbarNav"
               aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
+
+      <!-- Navigation Menu (Collapsible on mobile) -->
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav ms-auto">
+          <!-- Home/Index Page Link -->
           <li class="nav-item">
             <a class="nav-link" href="{{ url_for('index') }}">
               <i class="bi bi-house-door"></i>Home
             </a>
           </li>
+
+          <!-- Add New Command Link -->
           <li class="nav-item">
             <a class="nav-link" href="{{ url_for('add') }}">
               <i class="bi bi-plus-circle"></i>Add New
             </a>
           </li>
+
+          <!-- Download CLI Tool Link -->
           <li class="nav-item">
             <a class="nav-link" href="{{ url_for('download_cli') }}">
               <i class="bi bi-download"></i>Download CLI
             </a>
           </li>
+
+          <!-- Help Page Link -->
           <li class="nav-item">
             <a class="nav-link" href="{{ url_for('help_page') }}">
               <i class="bi bi-question-circle"></i>Help
             </a>
           </li>
+
+          <!-- Data Management Dropdown Menu -->
           <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" role="button" 
+            <a class="nav-link dropdown-toggle" href="#" role="button"
                data-bs-toggle="dropdown" aria-expanded="false">
               <i class="bi bi-database"></i>Data
             </a>
             <ul class="dropdown-menu dropdown-menu-end">
+              <!-- Export commands to JSON file -->
               <li>
                 <a class="dropdown-item" href="{{ url_for('export_json') }}">
                   <i class="bi bi-download me-2"></i>Export JSON
                 </a>
               </li>
+              <!-- Import commands from JSON file -->
               <li>
                 <a class="dropdown-item" href="{{ url_for('import_json') }}">
                   <i class="bi bi-upload me-2"></i>Import JSON
@@ -126,34 +121,54 @@
     </div>
   </nav>
 
+  <!-- ========================================
+  MAIN CONTENT AREA - Page-Specific Content
+  ======================================== -->
   <div class="container">
+    <!-- ========================================
+    FLASH MESSAGES - User Feedback System
+    ======================================== -->
     {% with messages = get_flashed_messages(with_categories=True) %}
       {% if messages %}
         {% for category, msg in messages %}
+          <!-- Dynamic alert messages based on flash category -->
           <div class="alert alert-{{ category }} alert-dismissible fade show d-flex align-items-center" role="alert">
+            <!-- Contextual icons for different message types -->
             {% if category == 'success' %}<i class="bi bi-check-circle-fill me-2"></i>
             {% elif category == 'warning' %}<i class="bi bi-exclamation-triangle-fill me-2"></i>
             {% elif category == 'danger' %}<i class="bi bi-x-circle-fill me-2"></i>
             {% else %}<i class="bi bi-info-circle-fill me-2"></i>{% endif %}
+            <!-- Message content -->
             {{ msg }}
+            <!-- Dismissible close button -->
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
           </div>
         {% endfor %}
       {% endif %}
     {% endwith %}
 
+    <!-- ========================================
+    PAGE CONTENT - Injected by Child Templates
+    ======================================== -->
     {% block content %}{% endblock %}
   </div>
 
+  <!-- ========================================
+  SITE FOOTER - Copyright and Attribution
+  ======================================== -->
   <footer class="bg-dark text-white text-center py-3 mt-4">
     <div class="container">
       <small>
         <i class="bi bi-code-slash me-1"></i>
-        Developed by <a href="https://github.com/ftsiadimos" class="text-white text-decoration-none fw-bold">Fotis</a>
+        Developed by <a href="https://github.com/ftsiadimos/command-cli-repo" class="text-white text-decoration-none fw-bold">Fotios Tsiadimos</a>
       </small>
     </div>
   </footer>
 
+  <!-- ========================================
+  JAVASCRIPT LIBRARIES - External Dependencies
+  ======================================== -->
+  <!-- Bootstrap 5 JavaScript bundle (includes Popper.js) -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

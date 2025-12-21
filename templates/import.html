@@ -1,16 +1,22 @@
 {% extends "layout.html" %}
 {% block content %}
+<!-- Import Commands Page - Form for uploading and importing JSON command files -->
 <div class="row justify-content-center">
   <div class="col-lg-8 col-md-10">
+    <!-- Main Card Container - Contains the entire import form -->
     <div class="card shadow-sm">
+      <!-- Card Header - Page title with upload icon -->
       <div class="card-header bg-info text-white">
         <h4 class="mb-0"><i class="bi bi-upload me-2"></i>Import Commands from JSON</h4>
       </div>
+      <!-- Card Body - Contains format info, form, and additional options -->
       <div class="card-body">
+        <!-- Format Information Alert - Shows expected JSON structure -->
         <div class="alert alert-info d-flex align-items-start">
           <i class="bi bi-info-circle-fill me-2 mt-1"></i>
           <div>
             <strong>Expected JSON format:</strong>
+            <!-- JSON Example - Shows the required structure for import files -->
             <pre class="bg-dark text-light p-2 rounded mt-2 mb-0"><code>[
   {
     "command": "ls -la",
@@ -22,7 +28,9 @@
           </div>
         </div>
 
+        <!-- Import Form - File upload form with multipart encoding -->
         <form method="post" enctype="multipart/form-data" class="mt-4">
+          <!-- File Input Field - JSON file selector with validation -->
           <div class="mb-4">
             <label for="file" class="form-label fw-semibold">
               <i class="bi bi-file-earmark-code me-1"></i>Select JSON File
@@ -34,23 +42,30 @@
             </div>
           </div>
           
+          <!-- Form Action Buttons - Import and cancel buttons -->
           <div class="d-flex gap-2">
+            <!-- Import Button - Processes the uploaded file -->
             <button type="submit" class="btn btn-info text-white">
               <i class="bi bi-upload me-1"></i>Import Commands
             </button>
+            <!-- Cancel Button - Returns to command list without importing -->
             <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
               <i class="bi bi-x-lg me-1"></i>Cancel
             </a>
           </div>
         </form>
 
+        <!-- Separator - Visual divider between form and additional options -->
         <hr class="my-4">
 
+        <!-- Additional Options Section - Export link and helpful tip -->
         <div class="d-flex justify-content-between align-items-center">
+          <!-- Help Tip - Guidance for users on creating import files -->
           <span class="text-muted">
             <i class="bi bi-lightbulb me-1"></i>
             <small>Tip: Use "Export JSON" to create a backup file you can import later.</small>
           </span>
+          <!-- Export Link - Direct link to export functionality -->
           <a href="{{ url_for('export_json') }}" class="btn btn-outline-success btn-sm">
             <i class="bi bi-download me-1"></i>Export JSON
           </a>

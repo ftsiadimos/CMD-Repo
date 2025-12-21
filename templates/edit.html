@@ -1,31 +1,40 @@
 {% extends "layout.html" %}
 {% block content %}
+<!-- Edit Command Page - Form for modifying existing command entries -->
 <div class="row justify-content-center">
   <div class="col-lg-8 col-md-10">
+    <!-- Main Card Container - Contains the entire edit command form -->
     <div class="card shadow-sm">
+      <!-- Card Header - Page title with edit icon -->
       <div class="card-header bg-warning text-dark">
         <h4 class="mb-0"><i class="bi bi-pencil-square me-2"></i>Edit Command</h4>
       </div>
+      <!-- Card Body - Contains the form elements and metadata -->
       <div class="card-body">
+        <!-- Edit Command Form - WTForms-powered form for command modification -->
         <form method="post" novalidate>
           {{ form.hidden_tag() }}
           
+          <!-- Command Input Field - Main command text input with terminal icon -->
           <div class="mb-3">
             {{ form.command.label(class="form-label fw-semibold") }}
             <div class="input-group">
               <span class="input-group-text"><i class="bi bi-terminal"></i></span>
               {{ form.command(class="form-control font-monospace", autocomplete="off") }}
             </div>
+            <!-- Command Field Validation Errors - Display form validation messages -->
             {% for error in form.command.errors %}
               <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle me-1"></i>{{ error }}</div>
             {% endfor %}
           </div>
           
+          <!-- Description Input Field - Optional description textarea -->
           <div class="mb-3">
             {{ form.description.label(class="form-label fw-semibold") }}
             {{ form.description(class="form-control", rows=4) }}
           </div>
           
+          <!-- Tags Input Field - Comma-separated tags for categorization -->
           <div class="mb-4">
             {{ form.tags.label(class="form-label fw-semibold") }}
             <div class="input-group">
@@ -35,22 +44,29 @@
             <div class="form-text">Comma-separated tags for easier searching.</div>
           </div>
           
+          <!-- Form Action Buttons - Submit and cancel buttons -->
           <div class="d-flex gap-2 flex-wrap">
+            <!-- Submit Button - Saves the modified command -->
             <button type="submit" class="btn btn-warning">
               <i class="bi bi-check-lg me-1"></i>{{ form.submit.label.text }}
             </button>
+            <!-- Cancel Button - Returns to command list without saving -->
             <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
               <i class="bi bi-x-lg me-1"></i>Cancel
             </a>
           </div>
         </form>
         
+        <!-- Separator - Visual divider between form and metadata -->
         <hr class="my-4">
         
+        <!-- Command Metadata Section - Shows creation date and delete option -->
         <div class="d-flex justify-content-between align-items-center">
+          <!-- Creation Timestamp - Shows when the command was originally created -->
           <small class="text-muted">
             <i class="bi bi-clock me-1"></i>Created: {{ command.created_at.strftime('%Y-%m-%d %H:%M') }}
           </small>
+          <!-- Delete Command Form - Allows permanent deletion of the command -->
           <form action="{{ url_for('delete', cmd_id=command.id) }}" method="post" class="d-inline">
             <button type="submit" class="btn btn-outline-danger btn-sm" 
                     onclick="return confirm('Are you sure you want to delete this command?');">
