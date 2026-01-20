@@ -249,12 +249,13 @@ cmd_list() {
     fi
     
     # Parse and display
-    local cmd_width=40
-    local desc_width=30
+    local cmd_width=45
+    local desc_width=35
+    local tag_width=15
     
     # Header
-    echo -e "${CYAN}${BOLD}  ID │ Command                                  │ Description                    │ Tags         │ Created${RESET}"
-    echo -e "${DIM}─────┼──────────────────────────────────────────┼────────────────────────────────┼──────────────┼────────────${RESET}"
+    printf "${CYAN}${BOLD}%5s │ %-45s │ %-35s │ %-15s │ %-10s${RESET}\n" "ID" "Command" "Description" "Tags" "Created"
+    printf "${DIM}%s┼%s┼%s┼%s┼%s${RESET}\n" "──────" "───────────────────────────────────────────────" "─────────────────────────────────────" "─────────────────" "────────────"
     
     local count=0
     if has_jq; then
@@ -272,16 +273,12 @@ cmd_list() {
             created=$(echo "$line" | jq -r '.created_at // ""' | cut -c1-10)
             
             # Truncate fields
-            [[ ${#cmd} -gt 40 ]] && cmd="${cmd:0:39}…"
-            [[ ${#desc} -gt 30 ]] && desc="${desc:0:29}…"
-            [[ ${#tags} -gt 12 ]] && tags="${tags:0:11}…"
+            [[ ${#cmd} -gt $cmd_width ]] && cmd="${cmd:0:$((cmd_width-1))}…"
+            [[ ${#desc} -gt $desc_width ]] && desc="${desc:0:$((desc_width-1))}…"
+            [[ ${#tags} -gt $tag_width ]] && tags="${tags:0:$((tag_width-1))}…"
             
-            printf "%s%4s%s │ %s%-40s%s │ %-30s │ %s%-12s%s │ %s%s%s\n" \
-                "$BOLD" "$id" "$RESET" \
-                "$GREEN" "$cmd" "$RESET" \
-                "$desc" \
-                "$BLUE" "$tags" "$RESET" \
-                "$DIM" "$created" "$RESET"
+            printf "${BOLD}%5s${RESET} │ ${GREEN}%-45s${RESET} │ %-35s │ ${BLUE}%-15s${RESET} │ ${DIM}%-10s${RESET}\n" \
+                "$id" "$cmd" "$desc" "$tags" "$created"
             
             ((count++)) || true
         done < <(echo "$body" | jq -c '.[]')
@@ -308,25 +305,39 @@ cmd_show() {
     
     if has_jq; then
         local cmd desc tags created
-        cmd=$(echo "$body" | jq -r '.command')
-        desc=$(echo "$body" | jq -r '.description // "none"')
+        # Use jq without -r to keep escape sequences, then remove quotes and clean up escapes
+        cmd=$(echo "$body" | jq '.command' | sed 's/^"//;s/"$//' | sed 's/\\n/ /g; s/\\t/ /g; s/\\r//g; s/\\"/"/g; s/\\\\/\\/g' | tr -s ' ')
+        # Also clean up description escape sequences
+        desc=$(echo "$body" | jq '.description // "none"' | sed 's/^"//;s/"$//' | sed 's/\\n/ /g; s/\\t/ /g; s/\\r//g; s/\\"/"/g; s/\\\\/\\/g' | tr -s ' ')
         tags=$(echo "$body" | jq -r '.tags // "none"')
         created=$(echo "$body" | jq -r '.created_at // ""')
         
+        local box_width=60
+        local content_width=58
+        
         echo -e "\n${BOLD}╭────────────────────────────────────────────────────────────╮${RESET}"
-        echo -e "${BOLD}│${RESET} ${CYAN}Command #${id}${RESET}"
+        printf "${BOLD}│${RESET} ${CYAN}%-59s${RESET}${BOLD}│${RESET}\n" "Command #${id}"
         echo -e "${BOLD}├────────────────────────────────────────────────────────────┤${RESET}"
-        echo -e "${BOLD}│${RESET} ${GREEN}${BOLD}\$ ${cmd}${RESET}"
+        # Word wrap command (57 chars to account for "$ " prefix)
+        local first_line=true
+        while IFS= read -r line; do
+            if $first_line; then
+                printf "${BOLD}│${RESET} ${GREEN}${BOLD}\$ %-57s${RESET}${BOLD}│${RESET}\n" "$line"
+                first_line=false
+            else
+                printf "${BOLD}│${RESET} ${GREEN}${BOLD}  %-57s${RESET}${BOLD}│${RESET}\n" "$line"
+            fi
+        done < <(echo "$cmd" | fold -s -w 57)
         if [[ "$desc" != "none" && -n "$desc" && "$desc" != "null" ]]; then
             echo -e "${BOLD}├────────────────────────────────────────────────────────────┤${RESET}"
             # Word wrap description
-            echo "$desc" | fold -s -w 58 | while IFS= read -r line; do
-                echo -e "${BOLD}│${RESET} ${line}"
-            done
+            while IFS= read -r line; do
+                printf "${BOLD}│${RESET} %-59s${BOLD}│${RESET}\n" "$line"
+            done < <(echo "$desc" | fold -s -w 59)
         fi
         echo -e "${BOLD}├────────────────────────────────────────────────────────────┤${RESET}"
-        echo -e "${BOLD}│${RESET} ${BLUE}Tags:${RESET} ${tags}"
-        echo -e "${BOLD}│${RESET} ${DIM}Created: ${created}${RESET}"
+        printf "${BOLD}│${RESET} ${BLUE}Tags:${RESET} %-53s${BOLD}│${RESET}\n" "$tags"
+        printf "${BOLD}│${RESET} ${DIM}Created: %-50s${RESET}${BOLD}│${RESET}\n" "$created"
         echo -e "${BOLD}╰────────────────────────────────────────────────────────────╯${RESET}\n"
     else
         echo "$body"
