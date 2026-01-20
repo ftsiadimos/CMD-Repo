@@ -60,6 +60,42 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // =============================================================================
+    // TYPING EFFECT FUNCTIONALITY
+    // =============================================================================
+    // Creates a realistic terminal typing effect for command display
+    // Types out text character by character with configurable speed
+
+    /**
+     * Types out text character by character with a blinking cursor effect
+     * @param {HTMLElement} element - The element to type into
+     * @param {string} text - The text to type
+     * @param {number} speed - Milliseconds between each character (default: 50)
+     */
+    function typeCommand(element, text, speed = 50) {
+        let index = 0;
+        element.textContent = '';
+        element.classList.add('typing');
+        element.classList.remove('typed');
+        
+        function type() {
+            if (index < text.length) {
+                element.textContent += text.charAt(index);
+                index++;
+                setTimeout(type, speed);
+            } else {
+                // Typing complete - remove cursor after a brief pause
+                setTimeout(() => {
+                    element.classList.remove('typing');
+                    element.classList.add('typed');
+                }, 500);
+            }
+        }
+        
+        // Small delay before starting to type
+        setTimeout(type, 100);
+    }
+
+    // =============================================================================
     // ROW EXPANSION/COLLAPSE FUNCTIONALITY
     // =============================================================================
     // Allows users to expand table rows to see full command details
@@ -98,9 +134,28 @@ document.addEventListener('DOMContentLoaded', function () {
 
             // Dynamically adjust table cell spanning for expanded layout
             // When expanded, the description cell should span multiple columns
+            const cmdCell = row.querySelector('.cmd-cell');
+            const cmdText = cmdCell.querySelector('.truncate-2').textContent;
+            
             if (row.classList.contains('expanded')) {
-                // Expand description cell to span 5 columns (full width)
-                descCell.setAttribute('colspan', '5');
+                // Hide the original command cell
+                cmdCell.style.display = 'none';
+                
+                // Expand description cell to span 6 columns (full width including command column)
+                descCell.setAttribute('colspan', '6');
+                
+                // Create command header above description if it doesn't exist
+                let commandHeader = descCell.querySelector('.command-header');
+                if (!commandHeader) {
+                    commandHeader = document.createElement('div');
+                    commandHeader.className = 'command-header';
+                    commandHeader.innerHTML = `<span class="command-text typing"></span>`;
+                    descCell.insertBefore(commandHeader, descCell.firstChild);
+                    
+                    // Typing effect - type out command character by character
+                    const commandSpan = commandHeader.querySelector('.command-text');
+                    typeCommand(commandSpan, cmdText, 30); // 30ms per character
+                }
                 
                 // Add subtle animation for expansion
                 descCell.style.transition = 'all 0.3s ease';
@@ -108,6 +163,15 @@ document.addEventListener('DOMContentLoaded', function () {
                     descCell.style.opacity = '1';
                 }, 50);
             } else {
+                // Show the original command cell
+                cmdCell.style.display = '';
+                
+                // Remove command header
+                const commandHeader = descCell.querySelector('.command-header');
+                if (commandHeader) {
+                    commandHeader.remove();
+                }
+                
                 // Reset to normal single-column span
                 descCell.removeAttribute('colspan');
                 descCell.style.opacity = '0.8';
@@ -199,12 +263,23 @@ document.addEventListener('DOMContentLoaded', function () {
             // Expand or collapse all rows
             allRows.forEach(function (row) {
                 const descCell = row.querySelector('.desc-cell');
+                const cmdCell = row.querySelector('.cmd-cell');
                 const isRowExpanded = row.classList.contains('expanded');
                 
                 if (isCurrentlyExpanded) {
                     // Collapse all rows
                     if (isRowExpanded) {
                         row.classList.remove('expanded');
+                        
+                        // Show the original command cell
+                        cmdCell.style.display = '';
+                        
+                        // Remove command header
+                        const commandHeader = descCell.querySelector('.command-header');
+                        if (commandHeader) {
+                            commandHeader.remove();
+                        }
+                        
                         descCell.removeAttribute('colspan');
                         descCell.style.opacity = '0.8';
                         setTimeout(() => {
@@ -216,7 +291,21 @@ document.addEventListener('DOMContentLoaded', function () {
                     // Expand all rows
                     if (!isRowExpanded) {
                         row.classList.add('expanded');
-                        descCell.setAttribute('colspan', '5');
+                        
+                        // Hide the original command cell
+                        cmdCell.style.display = 'none';
+                        
+                        // Create command header above description
+                        const cmdText = cmdCell.querySelector('.truncate-2').textContent;
+                        let commandHeader = descCell.querySelector('.command-header');
+                        if (!commandHeader) {
+                            commandHeader = document.createElement('div');
+                            commandHeader.className = 'command-header';
+                            commandHeader.innerHTML = `<span class="command-text">${cmdText}</span>`;
+                            descCell.insertBefore(commandHeader, descCell.firstChild);
+                        }
+                        
+                        descCell.setAttribute('colspan', '6');
                         descCell.style.transition = 'all 0.3s ease';
                         setTimeout(() => {
                             descCell.style.opacity = '1';

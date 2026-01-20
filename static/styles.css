@@ -7,44 +7,50 @@ Consolidated CSS from layout.html and index.html
 CSS CUSTOM PROPERTIES (Variables)
 ======================================== */
 :root {
-  /* Modern Color Palette */
-  --primary-color: #2563eb;        /* Blue - professional, trustworthy */
-  --primary-hover: #1d4ed8;       /* Darker blue for hover states */
-  --secondary-color: #64748b;     /* Slate - sophisticated gray */
-  --accent-color: #f59e0b;        /* Amber - warm accent color */
-  --success-color: #10b981;       /* Emerald - modern green */
-  --danger-color: #ef4444;        /* Red - clear error indication */
-  --warning-color: #f59e0b;       /* Amber - attention-grabbing */
-  --info-color: #06b6d4;          /* Cyan - informational blue */
-
-  /* Neutral Colors */
-  --bg-primary: #ffffff;          /* Pure white background */
-  --bg-secondary: #f8fafc;        /* Very light gray */
-  --bg-tertiary: #f1f5f9;         /* Light gray for cards */
-  --bg-dark: #1e293b;            /* Dark slate for headers */
-
-  /* Text Colors */
-  --text-primary: #1e293b;        /* Dark slate for headings */
-  --text-secondary: #64748b;     /* Medium gray for body text */
-  --text-muted: #94a3b8;         /* Light gray for muted text */
-  --text-light: #f8fafc;         /* Very light for dark backgrounds */
-
+  /* Terminal Green Color Palette */
+  --terminal-green: #00ff00;          /* Classic bright terminal green */
+  --terminal-green-dark: #00cc00;     /* Darker green for hover states */
+  --terminal-green-light: #66ff66;    /* Lighter green for highlights */
+  --terminal-green-dim: #009900;      /* Dimmed green for secondary elements */
+  --terminal-amber: #ffaa00;          /* Amber for warnings/accents */
+  
+  /* Terminal Background Colors */
+  --terminal-bg: #000000;             /* Pure black terminal background */
+  --terminal-bg-light: #111111;       /* Slightly lighter black */
+  --terminal-bg-card: #1a1a1a;        /* Card backgrounds */
+  --terminal-bg-header: #0d0d0d;      /* Header background */
+  
+  /* Terminal Text Colors */
+  --text-primary: #00ff00;            /* Primary green text */
+  --text-secondary: #66ff66;          /* Secondary lighter green */
+  --text-muted: #009900;              /* Muted darker green */
+  --text-light: #00ff00;              /* Light text (same as primary) */
+  --text-white: #ffffff;              /* Pure white for contrast */
+  
+  /* Terminal UI Colors */
+  --primary-color: #00ff00;           /* Primary green */
+  --primary-hover: #00cc00;           /* Darker green for hover */
+  --secondary-color: #666666;         /* Gray for secondary elements */
+  --accent-color: #ffaa00;            /* Amber accent */
+  --success-color: #00ff00;           /* Green success */
+  --danger-color: #ff4444;            /* Red for errors */
+  --warning-color: #ffaa00;           /* Amber for warnings */
+  --info-color: #00ccff;              /* Cyan for info */
+  
   /* Border Colors */
-  --border-light: #e2e8f0;       /* Light border */
-  --border-medium: #cbd5e1;      /* Medium border */
-
+  --border-light: #333333;            /* Dark border */
+  --border-medium: #444444;           /* Medium border */
+  --border-green: #00ff00;            /* Green accent border */
+  
   /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-
+  --shadow-sm: 0 1px 2px 0 rgba(0, 255, 0, 0.1);
+  --shadow-md: 0 4px 6px -1px rgba(0, 255, 0, 0.2), 0 2px 4px -1px rgba(0, 255, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 255, 0, 0.3), 0 4px 6px -2px rgba(0, 255, 0, 0.1);
+  
   /* Gradients */
-  --gradient-primary: linear-gradient(135deg, #60a5fa 0%, #1e40af 100%);
-  --gradient-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-
-  /* Mobile background (customizable) */
-  --mobile-bg: #ffffff; /* change this to tweak mobile card background */
-
+  --gradient-primary: linear-gradient(135deg, #00ff00 0%, #00cc00 100%);
+  --gradient-secondary: linear-gradient(135deg, #333333 0%, #111111 100%);
+  
   /* Transitions */
   --transition-speed: 0.3s;
   --transition-fast: 0.15s;
@@ -53,35 +59,38 @@ CSS CUSTOM PROPERTIES (Variables)
 /* ========================================
 LAYOUT AND TYPOGRAPHY
 ======================================== */
-/* Modern system font stack for cross-platform consistency */
+/* Terminal-style font stack with monospace preference */
 body {
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family: 'Courier New', 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace;
   display: flex;
   flex-direction: column;
   min-height: 100vh;  /* Full viewport height for sticky footer */
-  background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+  background: var(--terminal-bg);
   color: var(--text-primary);
-  line-height: 1.6;
+  line-height: 1.4;
+  overflow-x: auto;
 }
 
 /* Main content area grows to fill available space */
 .container {
   flex: 1;
+  background: var(--terminal-bg);
+  padding: 1rem;
 }
 
-/* Footer stays at bottom and doesn't shrink */
+/* Footer stays at bottom with terminal styling */
 footer {
   flex-shrink: 0;
-  background: var(--gradient-primary);
-  color: var(--text-light);
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--terminal-bg-header);
+  color: var(--text-primary);
+  border-top: 2px solid var(--border-green);
 }
 
 /* Enhanced footer text styling */
 footer small {
   font-weight: 500;
   font-size: 0.9rem;
-  color: var(--text-muted);
+  color: var(--text-primary);
 }
 
 /* ========================================
@@ -97,132 +106,151 @@ ACCESSIBILITY IMPROVEMENTS
 ======================================== */
 /* Enhanced focus indicators for keyboard navigation */
 .btn:focus, .form-control:focus, .form-select:focus, .nav-link:focus {
-  box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.25);
+  box-shadow: 0 0 0 0.2rem rgba(255, 170, 0, 0.4);
   outline: none;
 }
 
 /* ========================================
 BUTTON ENHANCEMENTS
 ======================================== */
-/* Primary buttons with modern gradient */
+/* Primary buttons with terminal green styling */
 .btn-primary {
-  background: var(--gradient-primary);
-  border: none;
-  color: white;
-  font-weight: 500;
-  box-shadow: var(--shadow-sm);
+  background: var(--terminal-bg-light);
+  border: 2px solid var(--terminal-green);
+  color: var(--terminal-green);
+  font-weight: 600;
+  font-family: inherit;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .btn-primary:hover {
-  background: var(--primary-hover);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
-  color: white;
+  background: var(--terminal-green);
+  color: var(--terminal-bg);
+  border-color: var(--terminal-green);
+  box-shadow: 0 0 10px var(--terminal-green);
 }
 
-/* Success buttons with modern green */
+/* Success buttons */
 .btn-success {
-  background: var(--success-color);
-  border: none;
-  color: white;
-  font-weight: 500;
+  background: var(--terminal-bg-light);
+  border: 2px solid var(--success-color);
+  color: var(--success-color);
+  font-weight: 600;
+  font-family: inherit;
 }
 
 .btn-success:hover {
-  background: #059669;
-  color: white;
+  background: var(--success-color);
+  color: var(--terminal-bg);
+  border-color: var(--success-color);
 }
 
-/* Danger buttons with modern red */
+/* Danger buttons */
 .btn-danger {
-  background: var(--danger-color);
-  border: none;
-  color: white;
-  font-weight: 500;
+  background: var(--terminal-bg-light);
+  border: 2px solid var(--danger-color);
+  color: var(--danger-color);
+  font-weight: 600;
+  font-family: inherit;
 }
 
 .btn-danger:hover {
-  background: #dc2626;
-  color: white;
+  background: var(--danger-color);
+  color: var(--terminal-bg);
+  border-color: var(--danger-color);
 }
 
-/* Warning buttons with modern amber */
+/* Warning buttons */
 .btn-warning {
-  background: var(--warning-color);
-  border: none;
-  color: white;
-  font-weight: 500;
+  background: var(--terminal-bg-light);
+  border: 2px solid var(--warning-color);
+  color: var(--warning-color);
+  font-weight: 600;
+  font-family: inherit;
 }
 
 .btn-warning:hover {
-  background: #d97706;
-  color: white;
+  background: var(--warning-color);
+  color: var(--terminal-bg);
+  border-color: var(--warning-color);
+}
+
+/* Outline buttons */
+.btn-outline-primary {
+  background: transparent;
+  border: 1px solid var(--terminal-green);
+  color: var(--terminal-green);
+}
+
+.btn-outline-primary:hover {
+  background: var(--terminal-green);
+  color: var(--terminal-bg);
+}
+
+.btn-outline-secondary {
+  background: transparent;
+  border: 1px solid var(--secondary-color);
+  color: var(--secondary-color);
+}
+
+.btn-outline-secondary:hover {
+  background: var(--secondary-color);
+  color: var(--terminal-bg);
+}
+
+.btn-outline-danger {
+  background: transparent;
+  border: 1px solid var(--danger-color);
+  color: var(--danger-color);
+}
+
+.btn-outline-danger:hover {
+  background: var(--danger-color);
+  color: var(--terminal-bg);
 }
 
 /* ========================================
 CARD ENHANCEMENTS
 ======================================== */
 .card {
-  border: none;
-  border-radius: 0.75rem;
+  border: 2px solid var(--border-green);
+  border-radius: 0;
   box-shadow: var(--shadow-md);
-  background: var(--mobile-bg);
+  background: var(--terminal-bg-card);
   transition: all var(--transition-speed) ease;
 }
 
 .card:hover {
-  box-shadow: var(--shadow-lg);
-  transform: translateY(-2px);
+  border-color: var(--terminal-green-light);
+  box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
 }
 
 .card-header {
-  background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--border-light) 100%);
-  border-bottom: 1px solid var(--border-light);
-  font-weight: 600;
+  background: var(--terminal-bg-header);
+  border-bottom: 2px solid var(--border-green);
+  font-weight: 700;
   color: var(--text-primary);
-  border-radius: 0.75rem 0.75rem 0 0 !important;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-radius: 0 !important;
 }
 
-/* Dark card headers for white text */
-.card-header.bg-primary,
-.card-header.bg-info,
-.card-header.bg-success,
-.card-header.bg-warning,
-.card-header.bg-danger,
-.card-header.text-white {
-  background: var(--bg-dark) !important;
-  color: var(--text-light) !important;
-  border-bottom: 1px solid var(--border-medium);
-}
-
-/* Specific color overrides for different header types */
-.card-header.bg-primary {
-  background: var(--primary-color) !important;
-}
-
-.card-header.bg-info {
-  background: var(--info-color) !important;
-}
-
-.card-header.bg-success {
-  background: var(--success-color) !important;
-}
-
-.card-header.bg-warning {
-  background: var(--warning-color) !important;
-}
-
-.card-header.bg-danger {
-  background: var(--danger-color) !important;
+.card-body {
+  background: var(--terminal-bg-card);
+  color: var(--text-primary);
 }
 
 /* ========================================
 TYPOGRAPHY ENHANCEMENTS
 ======================================== */
 h1, h2, h3, h4, h5, h6 {
-  color: var(--text-primary);
-  font-weight: 600;
-  line-height: 1.3;
+  color: var(--terminal-green);
+  font-weight: 700;
+  line-height: 1.2;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-family: inherit;
 }
 
 h1 { font-size: 2.25rem; }
@@ -234,42 +262,148 @@ h6 { font-size: 1rem; }
 
 /* Form labels */
 .form-label {
-  color: var(--text-primary);
-  font-weight: 500;
+  color: var(--terminal-green);
+  font-weight: 700;
   margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
-/* Ensure all text has good contrast */
+/* Ensure all text has terminal styling */
 .text-muted {
   color: var(--text-muted) !important;
+}
+
+p, span, div {
+  color: var(--text-primary);
+}
+
+/* Form controls */
+.form-control, .form-select {
+  background: var(--terminal-bg-light);
+  border: 2px solid var(--border-light);
+  color: var(--terminal-green);
+  border-radius: 0;
+  font-family: inherit;
+  font-weight: 600;
+}
+
+.form-control:focus, .form-select:focus {
+  background: var(--terminal-bg-light);
+  border-color: var(--terminal-green);
+  color: var(--terminal-green);
+  box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+}
+
+.form-control::placeholder {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* ========================================
+KEYBOARD-STYLE ENTER BUTTON
+======================================== */
+.btn-keyboard {
+  background: linear-gradient(180deg, #444 0%, #222 100%);
+  border: 2px solid var(--border-light);
+  border-bottom: 4px solid #111;
+  color: var(--terminal-green);
+  font-family: inherit;
+  font-weight: 700;
+  padding: 0.375rem 0.75rem;
+  border-radius: 4px;
+  transition: all 0.1s ease;
+  box-shadow: 
+    0 2px 0 #111,
+    inset 0 1px 0 rgba(255,255,255,0.1);
+}
+
+.btn-keyboard:hover {
+  background: linear-gradient(180deg, #555 0%, #333 100%);
+  color: var(--terminal-green-light);
+  border-color: var(--terminal-green);
+}
+
+.btn-keyboard:active {
+  transform: translateY(2px);
+  border-bottom-width: 2px;
+  box-shadow: 
+    0 0 0 #111,
+    inset 0 1px 0 rgba(255,255,255,0.1);
+}
+
+.key-cap {
+  font-size: 1.1rem;
+  text-shadow: 0 0 5px var(--terminal-green);
+}
+
+/* ========================================
+COMPACT ROWS SELECTOR
+======================================== */
+.rows-select {
+  width: auto;
+  min-width: 70px;
+  padding: 0.25rem 2rem 0.25rem 0.5rem;
+  font-size: 0.875rem;
+  background-position: right 0.5rem center;
+}
+
+.rows-select option {
+  background: var(--terminal-bg);
+  color: var(--terminal-green);
 }
 
 /* ========================================
 NAVIGATION STYLING
 ======================================== */
-/* Modern navigation bar with gradient background */
+/* Terminal-style navigation bar */
 .navbar {
-  background: var(--gradient-primary);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: var(--shadow-md);
+  background: var(--terminal-bg-header) !important;
+  border-bottom: 3px solid var(--border-green);
+  box-shadow: 0 2px 10px rgba(0, 255, 0, 0.3);
 }
 
-/* Consistent spacing for navigation icons */
-.nav-link i {
-  margin-right: 0.35rem;
+.navbar-brand {
+  color: var(--terminal-green) !important;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
 }
 
-/* Visual indicator for active navigation items */
-.nav-link.active {
+.navbar-brand:hover {
+  color: var(--terminal-green-light) !important;
+}
+
+.nav-link {
+  color: var(--text-secondary) !important;
   font-weight: 600;
-  color: var(--accent-color) !important;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
-/* Enhanced navigation link hover effects */
 .nav-link:hover {
-  color: var(--text-light) !important;
-  transform: translateY(-1px);
+  color: var(--terminal-green) !important;
+  text-shadow: 0 0 5px var(--terminal-green);
+}
+
+.nav-link.active {
+  color: var(--terminal-green) !important;
+  text-shadow: 0 0 10px var(--terminal-green);
+}
+
+.dropdown-menu {
+  background: var(--terminal-bg-card);
+  border: 2px solid var(--border-green);
+  border-radius: 0;
+}
+
+.dropdown-item {
+  color: var(--text-primary);
+}
+
+.dropdown-item:hover {
+  background: var(--terminal-green);
+  color: var(--terminal-bg);
 }
 
 /* ========================================
@@ -309,16 +443,33 @@ tr.expanded .truncate-3 {
 /* ========================================
 EXPANDED ROW VISUAL ENHANCEMENTS
 ======================================== */
-/* Add subtle shadow and border to expanded rows for better separation */
+/* Add terminal-style glow and border to expanded rows */
 tr.expanded {
-  box-shadow: var(--shadow-lg);
-  border: 1px solid var(--border-light);
-  background-color: #fff;
-  transition: all var(--transition-speed) ease;              /* Smooth transition for visual changes */
+  box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+  border: 2px solid var(--terminal-green);
+  background-color: var(--terminal-bg-light);
+  transition: all var(--transition-speed) ease;
 }
-/* Remove table stripe effect for expanded rows */
+/* Override table stripe effect for expanded rows */
 .table-striped tr.expanded:nth-child(odd) {
-  background-color: #fff !important;
+  background-color: var(--terminal-bg) !important;
+}
+
+/* Force Bootstrap table-striped to use terminal colors */
+.table-striped > tbody > tr:nth-of-type(odd) > * {
+  background-color: transparent !important;
+  --bs-table-accent-bg: transparent !important;
+}
+
+.table-striped > tbody > tr:nth-of-type(even) > * {
+  background-color: transparent !important;
+  --bs-table-accent-bg: transparent !important;
+}
+
+/* Override Bootstrap table hover */
+.table-hover > tbody > tr:hover > * {
+  background-color: transparent !important;
+  --bs-table-accent-bg: transparent !important;
 }
 
 /* ========================================
@@ -326,32 +477,41 @@ EXPANSION ARROW INDICATOR
 ======================================== */
 .expand-arrow {
   display: inline-block;
-  transition: transform 0.3s ease;       /* Smooth rotation animation */
-  font-size: 0.9rem;
+  transition: transform 0.3s ease;
+  font-size: 1rem;
   margin-right: 0.4rem;
   cursor: pointer;
-  user-select: none;                     /* Prevent text selection */
+  user-select: none;
+  color: var(--terminal-green);
+  font-weight: bold;
 }
 /* Rotate arrow 90 degrees when row is expanded */
-tr.expanded .expand-arrow { transform: rotate(90deg); }
+tr.expanded .expand-arrow { 
+  transform: rotate(90deg);
+  text-shadow: 0 0 5px var(--terminal-green);
+}
 
 /* ========================================
 EXPAND ALL ARROW - Header arrow to toggle all rows
 ======================================== */
 .expand-all-arrow {
   display: inline-block;
-  transition: transform var(--transition-speed) ease;       /* Smooth rotation animation */
-  font-size: 1rem;
+  transition: transform var(--transition-speed) ease;
+  font-size: 1.1rem;
   cursor: pointer;
-  user-select: none;                     /* Prevent text selection */
-  color: var(--text-light);             /* Light color for dark header */
+  user-select: none;
+  color: var(--terminal-green);
   font-weight: bold;
 }
 /* Rotate expand-all arrow 90 degrees when all rows are expanded */
-.expand-all-arrow.expanded { transform: rotate(90deg); }
+.expand-all-arrow.expanded { 
+  transform: rotate(90deg);
+  text-shadow: 0 0 10px var(--terminal-green);
+}
 /* Hover effect for expand-all arrow */
 .expand-all-arrow:hover {
-  color: var(--accent-color);           /* Accent color on hover */
+  color: var(--terminal-green-light);
+  text-shadow: 0 0 15px var(--terminal-green);
 }
 
 /* ========================================
@@ -360,48 +520,215 @@ CLICKABLE CELLS FOR EXPANSION
 /* Add pointer cursor to arrow cell to indicate it's clickable */
 .cmd-table tbody tr td:first-child {
   cursor: pointer;
-  user-select: none;                     /* Prevent text selection */
+  user-select: none;
 }
-/* Add subtle hover effect for clickable arrow cell */
+/* Add terminal-style hover effect for clickable arrow cell */
 .cmd-table tbody tr:not(.expanded) td:first-child:hover {
-  background-color: rgba(37, 99, 235, 0.1); /* Primary color with transparency */
+  background-color: rgba(0, 255, 0, 0.2) !important;
 }
 
 /* ========================================
-COMMAND CELL STYLING - Becomes title when expanded
+TAGS COLUMN STYLING - Terminal labels
 ======================================== */
-.cmd-cell { font-family: monospace; }    /* Monospace for code readability */
-tr.expanded .cmd-cell {
-  white-space: pre-wrap !important;      /* Preserve formatting in expanded view */
-  padding: 1rem 0.75rem;                 /* More padding for expanded state */
-  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%);
-  border-radius: 0.5rem 0.5rem 0 0;     /* Rounded top corners */
-  color: white;
-  box-shadow: var(--shadow-md);
+.cmd-table td .truncate-1 {
+  color: var(--terminal-amber);
+  font-size: 0.85rem;
 }
-/* Enhanced title styling for expanded command */
-tr.expanded .cmd-cell .truncate-2 {
-  font-size: 1.2rem;                    /* Larger, more prominent font */
-  font-weight: 600;                    /* Semi-bold for emphasis */
-  display: block;
-  margin-bottom: 0.25rem;              /* Space before description */
-  white-space: pre-wrap !important;
-  overflow: visible !important;
-  text-overflow: unset !important;
-  -webkit-line-clamp: unset !important;
-  line-clamp: unset !important;
-  color: white;                        /* White text on colored background */
-  line-height: 1.4;                    /* Comfortable line height */
-  font-family: 'SFMono-Regular', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Consolas', 'Courier New', monospace;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); /* Subtle text shadow */
+
+/* Date column styling */
+.cmd-table td.text-nowrap {
+  color: var(--text-muted);
+  font-size: 0.8rem;
 }
+
+/* ========================================
+BADGES AND LABELS
+======================================== */
+.badge {
+  background: var(--terminal-bg-light) !important;
+  color: var(--terminal-green) !important;
+  border: 1px solid var(--terminal-green) !important;
+  font-family: inherit;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.badge.bg-success {
+  background: var(--terminal-bg-light) !important;
+  color: var(--success-color) !important;
+  border-color: var(--success-color) !important;
+}
+
+.badge.bg-dark {
+  background: var(--terminal-bg-header) !important;
+  color: var(--terminal-green) !important;
+  border-color: var(--terminal-green) !important;
+}
+
+/* ========================================
+SCROLLING TAGS BADGE - Marquee effect for long tag lists
+======================================== */
+.tags-scroll-container {
+  max-width: 300px;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  background: var(--terminal-bg-header) !important;
+  border: 1px solid var(--terminal-green) !important;
+  padding: 0.35em 0.65em;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 0;
+}
+
+.tags-scroll-container i {
+  color: var(--terminal-green);
+  margin-right: 0.5rem;
+  flex-shrink: 0;
+}
+
+.tags-scroll-wrapper {
+  overflow: hidden;
+  position: relative;
+  flex: 1;
+}
+
+.tags-scroll-text {
+  display: inline-block;
+  white-space: nowrap;
+  color: var(--terminal-green);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  animation: scroll-tags 15s linear infinite;
+  padding-right: 50px;
+}
+
+.tags-scroll-text:hover {
+  animation-play-state: paused;
+}
+
+@keyframes scroll-tags {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+/* ========================================
+ALERTS
+======================================== */
+.alert {
+  border: 2px solid;
+  border-radius: 0;
+  background: var(--terminal-bg-card);
+  font-weight: 600;
+  font-family: inherit;
+}
+
+.alert-success {
+  color: var(--success-color);
+  border-color: var(--success-color);
+}
+
+.alert-danger {
+  color: var(--danger-color);
+  border-color: var(--danger-color);
+}
+
+.alert-warning {
+  color: var(--warning-color);
+  border-color: var(--warning-color);
+}
+
+.alert-info {
+  color: var(--info-color);
+  border-color: var(--info-color);
+}
+
+/* ========================================
+COMMAND CELL STYLING - Monospace font for code readability
+======================================== */
+.cmd-cell { 
+  font-family: 'Courier New', 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace;
+  background: transparent !important;
+}
+
+.cmd-cell .truncate-2 {
+  color: var(--terminal-green);
+  font-weight: 500;
+  text-shadow: 0 0 1px var(--terminal-green);
+}
+
+/* Terminal prompt prefix styling */
+.cmd-wrapper::before {
+  content: '$ ';
+  color: var(--terminal-amber);
+  font-weight: bold;
+}
+/* Note: When expanded, the command cell is hidden and the command is shown in the command-header */
 
 /* ========================================
 TABLE LAYOUT HIDING - Hide columns when expanded
 ======================================== */
 /* Hide non-essential columns when row is expanded to focus on content */
-tr.expanded td:not(.cmd-cell):not(.desc-cell):not(:first-child) {
+tr.expanded td:not(.desc-cell):not(:first-child) {
   display: none;
+}
+
+/* ========================================
+COMMAND HEADER - Displayed above description when expanded
+======================================== */
+.command-header {
+  background: var(--terminal-bg-header);
+  border: 2px solid var(--terminal-green);
+  border-bottom: none;
+  margin-bottom: 0;
+  padding: 1rem;
+  box-shadow: 0 0 15px rgba(0, 255, 0, 0.3);
+}
+
+/* Terminal prompt before command */
+.command-header::before {
+  content: '$ ';
+  color: var(--terminal-amber);
+  font-family: 'Courier New', 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.command-text {
+  font-family: 'Courier New', 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--terminal-green);
+  display: inline;
+  white-space: pre-wrap;
+  line-height: 1.4;
+  text-shadow: 0 0 5px var(--terminal-green);
+  word-break: break-all;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* Typing cursor effect */
+.command-text.typing::after {
+  content: '█';
+  color: var(--terminal-green);
+  animation: cursor-blink 0.7s infinite;
+  margin-left: 2px;
+}
+
+@keyframes cursor-blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+/* Finished typing - no cursor */
+.command-text.typed::after {
+  content: none;
 }
 
 /* ========================================
@@ -409,11 +736,11 @@ DESCRIPTION CELL EXPANSION - Full width when expanded
 ======================================== */
 tr.expanded .desc-cell {
   display: table-cell;
-  width: 100%;                           /* Take full table width */
-  padding: 0 0.75rem 1rem 0.75rem;       /* Consistent padding with command */
-  background: linear-gradient(135deg, var(--bg-tertiary) 0%, #e2e8f0 100%);
-  border-radius: 0 0 0.5rem 0.5rem;     /* Rounded bottom corners */
-  border-top: 1px solid var(--border-light);
+  width: 100%;
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+  box-shadow: 0 0 20px rgba(0, 255, 0, 0.2);
 }
 
 /* ========================================
@@ -424,19 +751,32 @@ DESCRIPTION TEXT FORMATTING
   font-family: inherit;                  /* Use parent font, not pre default */
   margin: 0;                            /* Remove default pre margin */
   line-height: 1.5;                     /* Improved line height for readability */
+  color: var(--text-muted);             /* Dimmer green for descriptions */
 }
+
+/* Description prefix - looks like a comment */
+.desc-cell .description-text.truncate-2::before {
+  content: '# ';
+  color: var(--text-muted);
+  font-weight: bold;
+}
+
 /* Enhanced readability when expanded */
 tr.expanded .description-text {
   white-space: pre-wrap !important;
-  font-size: 1rem;                      /* Consistent readable font size */
-  line-height: 1.6;                     /* Better line spacing for reading */
-  color: var(--text-primary);           /* Use theme text color */
-  margin-top: 0.5rem;                   /* Space from command title */
-  padding: 1rem;                        /* Breathing room around text */
-  background: rgba(255, 255, 255, 0.8); /* Semi-transparent white background */
-  border-radius: 0.375rem;              /* Rounded corners for modern look */
-  border-left: 4px solid var(--primary-color); /* Accent border with theme color */
-  box-shadow: var(--shadow-sm);         /* Subtle shadow for depth */
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--text-primary);
+  margin: 0;
+  padding: 1rem;
+  background: var(--terminal-bg);
+  border: 2px solid var(--terminal-green);
+  border-top: none;
+  border-left: 4px solid var(--terminal-green);
+}
+
+tr.expanded .desc-cell .description-text.truncate-2::before {
+  content: none;
 }
 
 /* ========================================
@@ -451,45 +791,75 @@ COPY BUTTON STYLING
 TABLE HEADER STYLING
 ======================================== */
 .cmd-table .table-dark {
-  background: var(--bg-dark);
-  color: var(--text-light);
+  background: var(--terminal-bg) !important;
+  color: var(--terminal-green);
   border: none;
 }
 
 .cmd-table .table-dark th {
-  border-bottom: 2px solid var(--border-medium);
-  font-weight: 600;
-  font-size: 0.9rem;
+  border-bottom: 2px solid var(--terminal-green);
+  border-top: none;
+  font-weight: 700;
+  font-size: 0.8rem;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  padding: 1rem 0.75rem;
+  letter-spacing: 1px;
+  padding: 0.75rem 0.5rem;
+  color: var(--terminal-green);
+  background: var(--terminal-bg) !important;
 }
+
+.cmd-table thead {
+  background: var(--terminal-bg) !important;
+}
+
 .cmd-table th, .cmd-table td {
-  vertical-align: middle;                /* Center content vertically */
-  border-color: var(--border-light);     /* Use theme border color */
+  vertical-align: middle;
+  border-color: var(--border-light);
+  color: var(--text-primary);
+  background: transparent;
 }
 
 /* ========================================
 TABLE BODY STYLING
 ======================================== */
 .cmd-table {
-  border-radius: 0.5rem;
+  border-radius: 0;
   overflow: hidden;
   box-shadow: var(--shadow-md);
-  background: var(--mobile-bg);
+  background: var(--terminal-bg) !important;
+  border: 2px solid var(--border-green);
+  margin: 0;
+}
+
+.cmd-table tbody {
+  background: var(--terminal-bg) !important;
+}
+
+.cmd-table tbody tr {
+  background: var(--terminal-bg) !important;
+  border-left: 3px solid transparent;
+  transition: all var(--transition-fast) ease;
 }
 
 .cmd-table tbody tr:nth-child(odd) {
-  background-color: var(--bg-secondary);
+  background-color: var(--terminal-bg) !important;
 }
 
 .cmd-table tbody tr:nth-child(even) {
-  background-color: white;
+  background-color: rgba(0, 255, 0, 0.02) !important;
 }
 
 .cmd-table tbody tr:hover {
-  background-color: rgba(37, 99, 235, 0.02);
-  transition: background-color var(--transition-fast) ease;
+  background-color: rgba(0, 255, 0, 0.08) !important;
+  border-left: 3px solid var(--terminal-green);
+}
+
+.cmd-table tbody td {
+  border-bottom: 1px solid var(--border-light);
+  color: var(--text-primary);
+  font-family: inherit;
+  background: transparent !important;
+  padding: 0.75rem 0.5rem;
 }
 
 /* Fixed column widths for consistent layout */
@@ -502,10 +872,229 @@ TABLE BODY STYLING
 /* Actions column: keep compact and right-aligned */
 .cmd-table .col-actions { width: 180px; white-space: nowrap; text-align: right; padding-right: 0.5rem; }
 
+/* ========================================
+MOBILE RESPONSIVE ADJUSTMENTS
+======================================== */
+/* Tablet adjustments (768px and below) */
+@media (max-width: 768px) {
+  .cmd-table .col-cmd { min-width: 150px; }
+  .cmd-table .col-desc { min-width: 120px; }
+  .cmd-table .col-tags { min-width: 80px; }
+  .cmd-table .col-date { width: 100px; font-size: 0.85rem; }
+  .cmd-table .col-actions { width: 120px; }
+  .copy-btn, .btn-sm { font-size: 0.75rem; padding: 0.25rem 0.5rem; }
+
+  /* Better spacing for expanded content on tablets */
+  tr.expanded .cmd-cell {
+    padding: 0.75rem 0.5rem;
+  }
+  tr.expanded .desc-cell {
+    padding: 0 0.5rem 0.75rem 0.5rem;
+  }
+  tr.expanded .description-text {
+    padding: 0.5rem;
+    font-size: 0.95rem;
+  }
+}
+/* Phone adjustments (576px and below) */
+@media (max-width: 576px) {
+  .cmd-table .col-tags { display: none; }     /* Hide tags column */
+  .cmd-table .col-date { display: none; }     /* Hide date column */
+  .cmd-table .col-actions { width: 100px; }
+  .truncate-2 { -webkit-line-clamp: 1; line-clamp: 1; }  /* Reduce truncation */
+
+  /* Optimized mobile expanded view */
+  tr.expanded .cmd-cell {
+    padding: 0.5rem;
+  }
+  tr.expanded .cmd-cell .truncate-2 {
+    font-size: 1.1rem;                      /* Slightly smaller on mobile */
+    line-height: 1.3;
+  }
+  tr.expanded .desc-cell {
+    padding: 0 0.5rem 0.5rem 0.5rem;
+  }
+  tr.expanded .description-text {
+    padding: 0.5rem;
+    font-size: 0.9rem;                      /* Smaller font for mobile readability */
+    line-height: 1.5;
+  }
+}
+
+/* Additional responsive adjustments */
+@media (max-width: 576px) {
+  h1, h2 { font-size: 1.5rem; }
+  .btn-action { width: 65px; font-size: 0.85rem; }
+}
+
 /* Card hover effect */
 .card {
   transition: box-shadow var(--transition-speed) ease;
 }
 .card:hover {
-  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  box-shadow: 0 0 25px rgba(0, 255, 0, 0.4);
+}
+
+/* ========================================
+PAGINATION STYLING
+======================================== */
+.pagination .page-link {
+  background: var(--terminal-bg) !important;
+  border: 1px solid var(--terminal-green) !important;
+  color: var(--terminal-green) !important;
+  font-weight: 600;
+  margin: 0 2px;
+  border-radius: 0 !important;
+}
+
+.pagination .page-link:hover {
+  background: var(--terminal-green) !important;
+  color: var(--terminal-bg) !important;
+  border-color: var(--terminal-green) !important;
+  box-shadow: 0 0 10px var(--terminal-green);
+}
+
+.pagination .page-item.active .page-link {
+  background: var(--terminal-green) !important;
+  border-color: var(--terminal-green) !important;
+  color: var(--terminal-bg) !important;
+}
+
+.pagination .page-item.disabled .page-link {
+  background: var(--terminal-bg-light) !important;
+  border-color: var(--border-light) !important;
+  color: var(--text-muted) !important;
+}
+
+/* Small pagination variant */
+.pagination-sm .page-link {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+}
+
+/* ========================================
+INPUT GROUP STYLING
+======================================== */
+.input-group-text {
+  background: var(--terminal-bg-light);
+  border: 2px solid var(--border-light);
+  border-right: none;
+  color: var(--terminal-green);
+  border-radius: 0;
+}
+
+/* ========================================
+TABLE RESPONSIVE CONTAINER - Terminal look
+======================================== */
+.table-responsive {
+  background: var(--terminal-bg) !important;
+  border: 2px solid var(--terminal-green);
+  padding: 0;
+  margin-bottom: 1rem;
+  box-shadow: 
+    0 0 20px rgba(0, 255, 0, 0.2),
+    inset 0 0 60px rgba(0, 0, 0, 0.5);
+}
+
+.table-responsive .cmd-table {
+  border: none;
+  margin-bottom: 0;
+}
+
+/* ========================================
+TERMINAL HEADER BAR
+======================================== */
+.terminal-header {
+  background: linear-gradient(180deg, #333 0%, #222 100%);
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--terminal-green);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.terminal-header::before {
+  content: '';
+  display: flex;
+  gap: 6px;
+}
+
+.terminal-btn {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.terminal-btn.close { background: #ff5f56; }
+.terminal-btn.minimize { background: #ffbd2e; }
+.terminal-btn.maximize { background: #27ca40; }
+
+.terminal-title {
+  flex: 1;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+/* ========================================
+SCANLINE EFFECT - Optional terminal aesthetic
+======================================== */
+.table-responsive::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.1),
+    rgba(0, 0, 0, 0.1) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+  pointer-events: none;
+  opacity: 0.15;
+}
+
+.table-responsive {
+  position: relative;
+  overflow-x: auto;
+  overflow-y: visible;
+}
+
+/* ========================================
+CURSOR BLINK EFFECT - Terminal authenticity
+======================================== */
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+.cursor-blink::after {
+  content: '█';
+  animation: blink 1s infinite;
+  color: var(--terminal-green);
+}
+
+/* ========================================
+CRT GLOW EFFECT - Subtle terminal glow
+======================================== */
+.table-responsive {
+  animation: crt-glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes crt-glow {
+  0% {
+    box-shadow: 
+      0 0 15px rgba(0, 255, 0, 0.2),
+      inset 0 0 60px rgba(0, 0, 0, 0.5);
+  }
+  100% {
+    box-shadow: 
+      0 0 25px rgba(0, 255, 0, 0.3),
+      inset 0 0 60px rgba(0, 0, 0, 0.5);
+  }
 }

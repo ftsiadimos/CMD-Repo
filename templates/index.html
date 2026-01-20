@@ -27,15 +27,19 @@ SEARCH AND FILTER CONTROLS
 <div class="card shadow-sm mb-4">
   <div class="card-body">
     <!-- Search form with responsive Bootstrap grid -->
-    <form class="row g-2 align-items-end" method="get" action="{{ url_for('index') }}">
+    <form class="row g-2 align-items-end" method="get" action="{{ url_for('index') }}" id="search-form">
       <!-- Search input field with datalist for tag suggestions -->
-      <div class="col-12 col-md-5 col-lg-4">
+      <div class="col-12 col-md-6 col-lg-5">
         <label for="search" class="form-label small text-muted mb-1">Search</label>
         <div class="input-group">
           <span class="input-group-text"><i class="bi bi-search"></i></span>
           <input type="text" id="search" name="search" class="form-control"
                  placeholder="Search commands, descriptions, tags…"
                  value="{{ search }}" list="tag-suggestions" autocomplete="off">
+          <!-- Enter/Search button styled like keyboard key -->
+          <button type="submit" class="btn btn-keyboard" title="Press Enter to search">
+            <span class="key-cap">↵</span>
+          </button>
         </div>
         <!-- Datalist provides autocomplete suggestions from existing tags -->
         <datalist id="tag-suggestions">
@@ -43,24 +47,6 @@ SEARCH AND FILTER CONTROLS
             <option value="{{ tag }}">{{ tag }}</option>
           {% endfor %}
         </datalist>
-      </div>
-
-      <!-- Rows per page selector -->
-      <div class="col-6 col-md-3 col-lg-2">
-        <label for="per_page" class="form-label small text-muted mb-1">Rows per page</label>
-        <select id="per_page" name="per_page" class="form-select">
-          <option value="5" {% if per_page|default(5)|int == 5 %}selected{% endif %}>5 rows</option>
-          <option value="25" {% if per_page|default(5)|int == 25 %}selected{% endif %}>25 rows</option>
-          <option value="50" {% if per_page|default(5)|int == 50 %}selected{% endif %}>50 rows</option>
-          <option value="100" {% if per_page|default(5)|int == 100 %}selected{% endif %}>100 rows</option>
-        </select>
-      </div>
-
-      <!-- Apply filters button -->
-      <div class="col-6 col-md-2 col-lg-2">
-        <button type="submit" class="btn btn-primary w-100">
-          <i class="bi bi-filter me-1"></i>Apply
-        </button>
       </div>
 
       <!-- Clear search button (only shown when search is active) -->
@@ -71,9 +57,33 @@ SEARCH AND FILTER CONTROLS
         </a>
       </div>
       {% endif %}
+
+      <!-- Spacer to push rows per page to right -->
+      <div class="col flex-grow-1"></div>
+
+      <!-- Rows per page selector - auto-submits on change -->
+      <div class="col-auto">
+        <label for="per_page" class="form-label small text-muted mb-1">Rows</label>
+        <select id="per_page" name="per_page" class="form-select form-select-sm rows-select" onchange="changeRowsPerPage(this.value)">
+          <option value="5" {% if per_page|default(5)|int == 5 %}selected{% endif %}>5</option>
+          <option value="25" {% if per_page|default(5)|int == 25 %}selected{% endif %}>25</option>
+          <option value="50" {% if per_page|default(5)|int == 50 %}selected{% endif %}>50</option>
+          <option value="100" {% if per_page|default(5)|int == 100 %}selected{% endif %}>100</option>
+        </select>
+      </div>
     </form>
   </div>
 </div>
+
+<script>
+// Auto-navigate when rows per page changes
+function changeRowsPerPage(value) {
+  const url = new URL(window.location.href);
+  url.searchParams.set('per_page', value);
+  url.searchParams.set('page', '1'); // Reset to first page
+  window.location.href = url.toString();
+}
+</script>
 
 <!-- ========================================
 COMMANDS TABLE - Only shown if commands exist
@@ -89,13 +99,20 @@ COMMANDS TABLE - Only shown if commands exist
   <link href="{{ url_for('static', filename='styles.css') }}" rel="stylesheet">
 
   <!-- ========================================
-  RESPONSIVE TABLE CONTAINER - Enables horizontal scrolling on small screens
+  RESPONSIVE TABLE CONTAINER - Terminal-style with header bar
   ======================================== -->
   <div class="table-responsive">
+    <!-- Terminal Window Header -->
+    <div class="terminal-header">
+      <span class="terminal-btn close"></span>
+      <span class="terminal-btn minimize"></span>
+      <span class="terminal-btn maximize"></span>
+      <span class="terminal-title">command-cli — bash</span>
+    </div>
   <!-- ========================================
   COMMANDS TABLE - Interactive data table with expansion and actions
   ======================================== -->
-  <table class="table table-striped table-hover cmd-table">
+  <table class="table table-hover cmd-table">
     <!-- ========================================
     TABLE HEADER - Column labels with icons
     ======================================== -->
@@ -184,6 +201,14 @@ COMMANDS TABLE - Only shown if commands exist
       <!-- Total Commands Badge - Shows count of all stored commands -->
       <span class="badge bg-success fs-6">
         <i class="bi bi-collection me-1"></i>{{ total_commands }} Commands
+      </span>
+
+      <!-- Total Tags Badge - Scrolling marquee for long tag lists -->
+      <span class="tags-scroll-container">
+        <i class="bi bi-tags"></i>
+        <span class="tags-scroll-wrapper">
+          <span class="tags-scroll-text">{{ total_tags|join(', ') or 'No tags' }} &nbsp;&nbsp;&nbsp; {{ total_tags|join(', ') or '' }}</span>
+        </span>
       </span>
 
       <!-- Pagination (compact) -->
