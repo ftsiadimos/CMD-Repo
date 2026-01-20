@@ -662,11 +662,19 @@ COMMAND CELL STYLING - Monospace font for code readability
   text-shadow: 0 0 1px var(--terminal-green);
 }
 
+/* Command wrapper - keeps $ and command on same line */
+.cmd-wrapper {
+  display: flex;
+  align-items: flex-start;
+}
+
 /* Terminal prompt prefix styling */
 .cmd-wrapper::before {
-  content: '$ ';
+  content: '$';
   color: var(--terminal-amber);
   font-weight: bold;
+  flex-shrink: 0;
+  margin-right: 0.5em;
 }
 /* Note: When expanded, the command cell is hidden and the command is shown in the command-header */
 
