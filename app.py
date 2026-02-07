@@ -1,8 +1,4 @@
-"""Legacy entry removed — use package layout.
+from app import create_app
 
-This file was removed and replaced with a tiny compatibility stub.
-
-Run the app with `python run.py` or `FLASK_APP=run.py flask run`.
-"""
-
-from run import app
+# Create a WSGI application callable for Gunicorn (module-level variable `app`)
+app = create_app()

@@ -17,6 +17,10 @@ def create_app():
         template_folder=template_folder,
         static_folder=static_folder,
     )
+
+    # Ensure the instance folder exists so the SQLite DB file can be created
+    os.makedirs(app.instance_path, exist_ok=True)
+
     app.config.from_object(Config)
 
     # Initialize extensions
@@ -46,3 +50,6 @@ def create_app():
     app.add_url_rule('/import-json', endpoint='import_json', view_func=app.view_functions['web.import_json'], methods=['GET','POST'])
 
     return app
+
+# For WSGI servers like Gunicorn: expose a module-level `app` callable
+app = create_app()
