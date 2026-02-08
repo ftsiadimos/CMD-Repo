@@ -35,6 +35,19 @@ Inheritance: Extended by all other templates (index.html, add.html, etc.)
   <link href="{{ url_for('static', filename='styles.css') }}" rel="stylesheet">
   <!-- Mobile Stylesheet -->
   <link href="{{ url_for('static', filename='mobile.css') }}" rel="stylesheet">
+
+  <!-- Theme initialization: apply stored theme early to avoid flash -->
+  <script>
+    (function(){
+      try {
+        var t = localStorage.getItem('theme');
+        if (t === 'soft') {
+          // add class to <html> early so CSS variables apply immediately
+          document.documentElement.classList.add('theme-soft');
+        }
+      } catch (e) { /* ignore */ }
+    })();
+  </script>
 </head>
 
 <!-- ========================================
@@ -93,6 +106,22 @@ HTML BODY - Main Application Layout
             <a class="nav-link" href="{{ url_for('help_page') }}">
               <i class="bi bi-question-circle"></i>Help
             </a>
+          </li>
+
+          <!-- Theme Selector Dropdown -->
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" role="button"
+               data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="bi bi-palette"></i>Theme
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li>
+                <button class="dropdown-item theme-select" data-theme="terminal">Terminal (default)</button>
+              </li>
+              <li>
+                <button class="dropdown-item theme-select" data-theme="soft">Soft / Easy on eyes</button>
+              </li>
+            </ul>
           </li>
 
           <!-- Data Management Dropdown Menu -->
@@ -170,5 +199,26 @@ HTML BODY - Main Application Layout
   ======================================== -->
   <!-- Bootstrap 5 JavaScript bundle (includes Popper.js) -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Theme selection behavior -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      document.querySelectorAll('.theme-select').forEach(function (el) {
+        el.addEventListener('click', function (e) {
+          e.preventDefault();
+          var theme = this.dataset.theme;
+          if (theme === 'soft') {
+            document.documentElement.classList.add('theme-soft');
+            localStorage.setItem('theme', 'soft');
+          } else {
+            document.documentElement.classList.remove('theme-soft');
+            localStorage.setItem('theme', 'terminal');
+          }
+          // Reload to ensure any server-rendered parts pick up change if needed
+          location.reload();
+        });
+      });
+    });
+  </script>
 </body>
 </html>

@@ -1106,3 +1106,57 @@ CRT GLOW EFFECT - Subtle terminal glow
       inset 0 0 60px rgba(0, 0, 0, 0.5);
   }
 }
+
+/* ========================================
+SOFT / EASY-ON-EYES THEME
+Overrides core CSS variables to provide a light, low-contrast palette
+======================================== */
+.theme-soft {
+  --terminal-bg: #f5f7f5;
+  --terminal-bg-light: #ffffff;
+  --terminal-bg-card: #ffffff;
+  --terminal-bg-header: #e9f0ea;
+
+  --terminal-green: #2f6f56;           /* Softer green */
+  --terminal-green-light: #66b892;     /* Lighter green for hover */
+  --terminal-amber: #b78f4a;           /* Muted amber accent */
+
+  --text-primary: #153e2b;             /* Dark green text for readability */
+  --text-secondary: #4a6b5f;           /* Secondary text */
+  --text-muted: #6b7f71;               /* Muted text */
+
+  --primary-color: #2f6f56;
+  --primary-hover: #66b892;
+  --accent-color: #b78f4a;
+
+  --border-green: #dfeee6;
+  --border-light: #e5e9e5;
+
+  --shadow-sm: 0 1px 2px rgba(47,111,86,0.06);
+  --shadow-md: 0 4px 6px -1px rgba(47,111,86,0.08), 0 2px 4px -1px rgba(47,111,86,0.04);
+
+  --gradient-primary: linear-gradient(135deg, #66b892 0%, #2f6f56 100%);
+  --transition-speed: 0.25s;
+}
+
+/* Ensure navbar and footer look good on the soft theme */
+.theme-soft .navbar {
+  box-shadow: none;
+  border-bottom: 1px solid var(--border-green);
+  background: var(--terminal-bg-header) !important;
+}
+
+.theme-soft footer {
+  background: var(--terminal-bg-header);
+  color: var(--text-primary);
+  border-top: 1px solid var(--border-green);
+}
+
+/* Slightly reduce strong glows for soft theme */
+.theme-soft .card:hover {
+  box-shadow: 0 0 10px rgba(47,111,86,0.08);
+}
+
+.theme-soft .btn-primary:hover {
+  box-shadow: 0 0 6px rgba(47,111,86,0.08);
+}
