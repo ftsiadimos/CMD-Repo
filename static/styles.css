@@ -426,6 +426,28 @@ TEXT TRUNCATION UTILITIES
   .truncate-3 { display: -webkit-box; line-clamp: 3; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
 }
 
+/* Fixed-character truncation utilities (monospace-friendly) */
+.truncate-cmd, .truncate-desc, .truncate-tags {
+  display: inline-block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+.truncate-cmd { max-width: 30ch; }   /* approx 25 characters */
+.truncate-desc { max-width: 25ch; }  /* approx 20 characters */
+.truncate-tags { max-width: 20ch; }  /* approx 15 characters */
+
+/* When a row is expanded, show full content */
+tr.expanded .truncate-cmd,
+tr.expanded .truncate-desc,
+tr.expanded .truncate-tags {
+  max-width: none !important;
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: unset !important;
+}
+
 /* ========================================
 EXPANDED ROW STYLES - Remove truncation when row is expanded
 ======================================== */
