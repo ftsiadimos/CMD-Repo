@@ -72,3 +72,15 @@ def api_get_command(cmd_id):
         "created_at": cmd.created_at.isoformat(),
         "subcommands": [ {"command": sc.command, "description": sc.description} for sc in cmd.subcommands ],
     }), 200
+
+
+@api_bp.route("/api/commands/<int:cmd_id>", methods=["DELETE"])
+def api_delete_command(cmd_id):
+    """Delete a command including its subcommands."""
+    cmd = db.session.get(Command, cmd_id)
+    if not cmd:
+        return jsonify({"error": f"Command with ID {cmd_id} not found."}), 404
+
+    db.session.delete(cmd)
+    db.session.commit()
+    return jsonify({"status": "deleted", "id": cmd_id}), 200

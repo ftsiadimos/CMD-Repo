@@ -4,7 +4,7 @@
 # Created by Fotios Tsiadimos
 #
 # Usage:
-#   repocomcli add "command" [-d description] [-t tags]
+#   repocomcli add "command" [-d description] [-t tags] [--sub "subcommand|description"]
 #   repocomcli list [-s search] [-n limit]
 #   repocomcli show <id>
 #   repocomcli copy <id>
@@ -15,6 +15,15 @@
 #
 
 set -euo pipefail
+
+# Ensure script is run under bash (we rely on bash arrays and features)
+if [ -z "${BASH_VERSION-}" ]; then
+    cat >&2 <<'EOF'
+This script requires Bash. You're running it with 'sh' or a non-Bash shell.
+Run it with: ./repocomcli <command> or: bash repocomcli <command>
+EOF
+    exit 2
+fi
 
 VERSION="1.2.0"
 
@@ -114,6 +123,8 @@ api_request() {
         curl_opts+=(-X POST -H "Content-Type: application/json" -d "$data")
     elif [[ "$method" == "GET" ]]; then
         curl_opts+=(-X GET)
+    elif [[ "$method" == "DELETE" ]]; then
+        curl_opts+=(-X DELETE)
     fi
     
     local body http_code
@@ -147,7 +158,10 @@ truncate() {
 
 cmd_add() {
     local command="" description="" tags=""
-    
+    # arrays for subcommands
+    local -a SUB_CMDS=()
+    local -a SUB_DESC=()
+
     # Parse arguments
     while [[ $# -gt 0 ]]; do
         case "$1" in
@@ -158,6 +172,25 @@ cmd_add() {
             -t|--tags)
                 tags="$2"
                 shift 2
+                ;;
+            --sub)
+                # format: "subcommand|description" (description optional)
+                if [[ -z "${2:-}" ]]; then
+                    die "--sub requires an argument: \"subcommand|description\""
+                fi
+                local val="$2"
+                shift 2
+                # split on first '|'
+                local sc_cmd sc_desc
+                if [[ "$val" == *"|"* ]]; then
+                    sc_cmd="${val%%|*}"
+                    sc_desc="${val#*|}"
+                else
+                    sc_cmd="$val"
+                    sc_desc=""
+                fi
+                SUB_CMDS+=("$sc_cmd")
+                SUB_DESC+=("$sc_desc")
                 ;;
             -*)
                 die "Unknown option: $1"
@@ -172,30 +205,62 @@ cmd_add() {
                 ;;
         esac
     done
-    
-    [[ -z "$command" ]] && die "Command is required.\nUsage: repocomcli add \"command\" [-d description] [-t tags]"
-    
-    # Build JSON payload (escape special characters)
+
+    [[ -z "$command" ]] && die "Command is required.\nUsage: repocomcli add \"command\" [-d description] [-t tags] [--sub \"subcommand|description\"]"
+
+    # Build JSON payload (escape special characters). Include subcommands if present.
     local json
     if has_jq; then
-        json=$(jq -n \
-            --arg cmd "$command" \
-            --arg desc "$description" \
-            --arg tags "$tags" \
-            '{command: $cmd, description: $desc, tags: $tags}')
+        # Build subcommands array (if any)
+        local subs_json
+        if [[ ${#SUB_CMDS[@]} -gt 0 ]]; then
+            subs_json="[]"
+            for i in "${!SUB_CMDS[@]}"; do
+                local sc_cmd=${SUB_CMDS[i]}
+                local sc_desc=${SUB_DESC[i]}
+                local item
+                item=$(jq -n --arg cmd "$sc_cmd" --arg desc "$sc_desc" '{command:$cmd, description:$desc}')
+                subs_json=$(jq -n --argjson a "$subs_json" --argjson b "$item" '$a + [$b]')
+            done
+            json=$(jq -n --arg cmd "$command" --arg desc "$description" --arg tags "$tags" --argjson subs "$subs_json" '{command: $cmd, description: $desc, tags: $tags, subcommands: $subs}')
+        else
+            json=$(jq -n --arg cmd "$command" --arg desc "$description" --arg tags "$tags" '{command: $cmd, description: $desc, tags: $tags}')
+        fi
     else
-        json=$(printf '{"command":"%s","description":"%s","tags":"%s"}' \
-            "$(echo "$command" | sed 's/\\/\\\\/g; s/"/\\"/g')" \
-            "$(echo "$description" | sed 's/\\/\\\\/g; s/"/\\"/g')" \
-            "$(echo "$tags" | sed 's/\\/\\\\/g; s/"/\\"/g')")
+        # Manual JSON construction; escape double quotes and backslashes
+        local esc_cmd esc_desc esc_tags
+        esc_cmd=$(echo "$command" | sed 's/\\/\\\\/g; s/"/\\"/g')
+        esc_desc=$(echo "$description" | sed 's/\\/\\\\/g; s/"/\\"/g')
+        esc_tags=$(echo "$tags" | sed 's/\\/\\\\/g; s/"/\\"/g')
+
+        if [[ ${#SUB_CMDS[@]} -gt 0 ]]; then
+            local subs_part
+            subs_part='"subcommands":['
+            for i in "${!SUB_CMDS[@]}"; do
+                local sc_cmd esc_sc_cmd esc_sc_desc
+                sc_cmd=${SUB_CMDS[i]}
+                esc_sc_cmd=$(echo "$sc_cmd" | sed 's/\\/\\\\/g; s/"/\\"/g')
+                esc_sc_desc=$(echo "${SUB_DESC[i]}" | sed 's/\\/\\\\/g; s/"/\\"/g')
+                # Append item safely using printf (strings already JSON-escaped above)
+                subs_part+=$(printf '%s' "{\"command\":\"%s\",\"description\":\"%s\"}" "$esc_sc_cmd" "$esc_sc_desc")
+                # append comma if not last
+                if [[ $i -lt $((${#SUB_CMDS[@]} - 1)) ]]; then
+                    subs_part+=','
+                fi
+            done
+            subs_part+=']'
+            json=$(printf '{"command":"%s","description":"%s","tags":"%s",%s}' "$esc_cmd" "$esc_desc" "$esc_tags" "$subs_part")
+        else
+            json=$(printf '{"command":"%s","description":"%s","tags":"%s"}' "$esc_cmd" "$esc_desc" "$esc_tags")
+        fi
     fi
-    
+
     check_curl
     local result http_code body
     result=$(api_request "POST" "" "$json")
     http_code=$(head -n1 <<< "$result")
     body=$(tail -n +2 <<< "$result")
-    
+
     if [[ "$http_code" == "201" ]]; then
         local id
         if has_jq; then
@@ -254,8 +319,8 @@ cmd_list() {
     local tag_width=15
     
     # Header
-    printf "${CYAN}${BOLD}%5s │ %-45s │ %-35s │ %-15s │ %-10s${RESET}\n" "ID" "Command" "Description" "Tags" "Created"
-    printf "${DIM}%s┼%s┼%s┼%s┼%s${RESET}\n" "──────" "───────────────────────────────────────────────" "─────────────────────────────────────" "─────────────────" "────────────"
+    printf "${CYAN}${BOLD}%5s │ %3s │ %-45s │ %-35s │ %-15s │ %-10s${RESET}\n" "ID" "S" "Command" "Description" "Tags" "Created"
+    printf "${DIM}%s┼%s┼%s┼%s┼%s┼%s${RESET}\n" "──────" "─────" "───────────────────────────────────────────────" "─────────────────────────────────────" "─────────────────" "────────────"
     
     local count=0
     if has_jq; then
@@ -265,21 +330,47 @@ cmd_list() {
         while IFS= read -r line; do
             [[ -n "$limit" && $count -ge $limit ]] && break
             
-            local id cmd desc tags created
+            local id cmd desc tags created subs_count has_sub
             id=$(echo "$line" | jq -r '.id')
             cmd=$(echo "$line" | jq -r '.command // ""' | tr '\n\r\t' '   ' | tr -s ' ')
             desc=$(echo "$line" | jq -r '.description // ""' | tr '\n\r\t' '   ' | tr -s ' ')
             tags=$(echo "$line" | jq -r '.tags // ""' | tr '\n\r\t' '   ')
             created=$(echo "$line" | jq -r '.created_at // ""' | cut -c1-10)
+            subs_count=$(echo "$line" | jq -r '(.subcommands // []) | length')
+            if [[ $subs_count -gt 0 ]]; then
+                has_sub="${GREEN}✔${RESET}"
+            else
+                has_sub="-"
+            fi
             
-            # Truncate fields
+            # Truncate fields (operates on plain text)
             [[ ${#cmd} -gt $cmd_width ]] && cmd="${cmd:0:$((cmd_width-1))}…"
             [[ ${#desc} -gt $desc_width ]] && desc="${desc:0:$((desc_width-1))}…"
             [[ ${#tags} -gt $tag_width ]] && tags="${tags:0:$((tag_width-1))}…"
-            
-            printf "${BOLD}%5s${RESET} │ ${GREEN}%-45s${RESET} │ %-35s │ ${BLUE}%-15s${RESET} │ ${DIM}%-10s${RESET}\n" \
-                "$id" "$cmd" "$desc" "$tags" "$created"
-            
+
+            # Prepare padded plain strings so widths are calculated without color codes
+            local id_fmt s_fmt cmd_fmt desc_fmt tags_fmt created_fmt s_col
+            id_fmt=$(printf "%5s" "$id")
+            if [[ $subs_count -gt 0 ]]; then
+                plain_check="✔"
+            else
+                plain_check="-"
+            fi
+            # Ensure a single leading space before the symbol and one trailing space to match header spacing
+            s_fmt=" ${plain_check} "
+            if [[ $subs_count -gt 0 ]]; then
+                s_col="${GREEN}${s_fmt}${RESET}"
+            else
+                s_col="$s_fmt"
+            fi
+            cmd_fmt=$(printf "%-45s" "$cmd")
+            desc_fmt=$(printf "%-35s" "$desc")
+            tags_fmt=$(printf "%-15s" "$tags")
+            created_fmt=$(printf "%-10s" "$created")
+
+            printf "${BOLD}%s${RESET} │ %s │ ${GREEN}%s${RESET} │ %s │ ${BLUE}%s${RESET} │ ${DIM}%s${RESET}\n" \
+                "$id_fmt" "$s_col" "$cmd_fmt" "$desc_fmt" "$tags_fmt" "$created_fmt"
+
             ((count++)) || true
         done < <(echo "$body" | jq -c '.[]')
         
@@ -335,6 +426,32 @@ cmd_show() {
                 printf "${BOLD}│${RESET} %-59s${BOLD}│${RESET}\n" "$line"
             done < <(echo "$desc" | fold -s -w 59)
         fi
+
+        # Subcommands (if any)
+        if has_jq; then
+            local subcount
+            subcount=$(echo "$body" | jq '(.subcommands // []) | length')
+            if [[ $subcount -gt 0 ]]; then
+                echo -e "${BOLD}├────────────────────────────────────────────────────────────┤${RESET}"
+                printf "${BOLD}│${RESET} ${CYAN}Subcommands (%s):${RESET}\n" "$subcount"
+
+                # Iterate and display each subcommand with optional description
+                while IFS= read -r sc; do
+                    sc_cmd=$(echo "$sc" | jq -r '.command // ""' | tr '\n\r\t' '   ' | tr -s ' ')
+                    sc_desc=$(echo "$sc" | jq -r '.description // ""' | tr '\n\r\t' '   ' | tr -s ' ')
+                    if [[ -n "$sc_desc" ]]; then
+                        sc_line="${sc_cmd} — ${sc_desc}"
+                    else
+                        sc_line="${sc_cmd}"
+                    fi
+                    # Word wrap each subcommand line and indent
+                    while IFS= read -r line; do
+                        printf "${BOLD}│${RESET}   ${GREEN}%-56s${RESET}${BOLD}│${RESET}\n" "$line"
+                    done < <(echo "$sc_line" | fold -s -w 56)
+                done < <(echo "$body" | jq -c '.subcommands[]')
+            fi
+        fi
+
         echo -e "${BOLD}├────────────────────────────────────────────────────────────┤${RESET}"
         printf "${BOLD}│${RESET} ${BLUE}Tags:${RESET} %-53s${BOLD}│${RESET}\n" "$tags"
         printf "${BOLD}│${RESET} ${DIM}Created: %-50s${RESET}${BOLD}│${RESET}\n" "$created"
@@ -386,6 +503,78 @@ cmd_copy() {
         echo -e "${DIM}   Install xclip, xsel, or wl-copy.${RESET}"
         echo -e "\n   ${GREEN}${cmd}${RESET}"
     fi
+}
+
+# Delete a command by id (with optional -y/--yes to skip confirmation)
+cmd_delete() {
+    local id="" yes=false
+
+    # Parse args flexibly: delete [ -y ] <id>
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            -y|--yes)
+                yes=true
+                shift
+                ;;
+            -* )
+                die "Unknown option: $1"
+                ;;
+            *)
+                if [[ -z "$id" ]]; then
+                    id="$1"
+                else
+                    die "Unexpected argument: $1"
+                fi
+                shift
+                ;;
+        esac
+    done
+
+    [[ -z "$id" ]] && die "ID is required.\nUsage: repocomcli delete <id> [-y|--yes]"
+
+    # Confirm with user unless -y provided
+    if [[ "$yes" != true && -t 0 ]]; then
+        read -r -p "Delete command with ID ${id}? [y/N] " answer
+        case "$answer" in
+            y|Y|yes|YES) ;;
+            *)
+                echo "Aborted."
+                return
+                ;;
+        esac
+    fi
+
+    check_curl
+    local result http_code body
+    result=$(api_request "DELETE" "/$id")
+    http_code=$(head -n1 <<< "$result")
+    body=$(tail -n +2 <<< "$result")
+
+    if [[ "$http_code" == "200" || "$http_code" == "204" ]]; then
+        success "Deleted command ${id}."
+        return
+    fi
+
+    # Fallback: if server returns 405 Method Not Allowed, try the web UI POST delete endpoint
+    if [[ "$http_code" == "405" ]]; then
+        warn "API DELETE not allowed on server; attempting web delete endpoint as fallback..."
+        # derive web base from API_BASE
+        local web_base
+        web_base="${API_BASE%/api/commands}"
+        # use curl directly to POST to /delete/<id>
+        local resp httpc
+        resp=$(curl -s -X POST -w $'\n%{http_code}' "$web_base/delete/$id") || die "Cannot connect to server to attempt fallback delete."
+        httpc=$(tail -n1 <<< "$resp")
+        body=$(sed '$d' <<< "$resp")
+        if [[ "$httpc" == "200" || "$httpc" == "302" || "$httpc" == "301" ]]; then
+            success "Deleted command ${id} via web endpoint (fallback)."
+            return
+        else
+            die "Failed to delete command ${id} via fallback: $body"
+        fi
+    fi
+
+    die "Failed to delete command ${id}: $body"
 }
 
 cmd_export() {
@@ -521,10 +710,12 @@ ${CYAN}USAGE:${RESET}
     repocomcli <command> [options]
 
 ${CYAN}COMMANDS:${RESET}
-    add <cmd> [-d desc] [-t tags]   Add a new command
-    list [-s search] [-n limit]     List all commands
-    show <id>                       Show command details
+    add <cmd> [-d desc] [-t tags] [--sub "subcmd|description"]
+                                    Add a new command. Use --sub multiple times to add subcommands.
+    list [-s search] [-n limit]     List all commands (S column indicates subcommand presence)
+    show <id>                       Show command details (includes subcommands)
     copy <id>                       Copy command to clipboard
+    delete <id> [-y|--yes]          Delete a command (use -y to skip confirmation)
     export <file.json>              Export commands to JSON
     import <file.json>              Import commands from JSON
     config set <host> [--port N]    Configure API server
@@ -535,10 +726,17 @@ ${CYAN}OPTIONS:${RESET}
     -v, --version   Show version number
 
 ${CYAN}EXAMPLES:${RESET}
-    repocomcli add "docker ps -a" -d "List containers" -t "docker"
-    repocomcli list -s docker
+    # Add a command with two subcommands
+    repocomcli add "git clone https://..." -d "Clone repo" --sub "clone --recursive|Clone recursively" --sub "init"
+
+    # List and inspect
+    repocomcli list -s git
     repocomcli show 42
+
+    # Copy and delete
     repocomcli copy 42
+    repocomcli delete 42 -y
+
     repocomcli export backup.json
     repocomcli import backup.json
     repocomcli config set 192.168.1.100 --port 5001
@@ -577,6 +775,9 @@ main() {
             ;;
         copy|cp)
             cmd_copy "$@"
+            ;;
+        delete|del|rm)
+            cmd_delete "$@"
             ;;
         export)
             cmd_export "$@"
