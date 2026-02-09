@@ -96,6 +96,50 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // =============================================================================
+    // CHARACTER-BASED TRUNCATION (Exact per-field limits)
+    // =============================================================================
+    // Apply fixed character truncation to command, description, and tags
+    // Stores full values in `data-full` and the truncated preview in `data-truncated`
+    function applyCharTruncation(cmdLimit = 25, descLimit = 20, tagsLimit = 15) {
+        document.querySelectorAll('tbody tr').forEach(function (row) {
+            // Command element (mono span)
+            const cmdEl = row.querySelector('.cmd-cell .truncate-2') || row.querySelector('.truncate-2');
+            if (cmdEl) {
+                const full = cmdEl.textContent.trim();
+                if (!cmdEl.dataset.full) cmdEl.dataset.full = full;
+                cmdEl.title = full;
+                const truncated = (full.length > cmdLimit) ? full.slice(0, cmdLimit) + '…' : full;
+                cmdEl.dataset.truncated = truncated;
+                cmdEl.textContent = truncated;
+            }
+
+            // Description element
+            const descEl = row.querySelector('.desc-cell .truncate-2') || row.querySelector('.description-text');
+            if (descEl) {
+                const full = descEl.textContent.trim();
+                if (!descEl.dataset.full) descEl.dataset.full = full;
+                descEl.title = full;
+                const truncated = (full.length > descLimit) ? full.slice(0, descLimit) + '…' : full;
+                descEl.dataset.truncated = truncated;
+                descEl.textContent = truncated;
+            }
+
+            // Tags element
+            const tagsEl = row.querySelector('.col-tags .truncate-1') || row.querySelector('.col-tags div');
+            if (tagsEl) {
+                const full = tagsEl.textContent.trim();
+                if (!tagsEl.dataset.full) tagsEl.dataset.full = full;
+                tagsEl.title = full;
+                const truncated = (full.length > tagsLimit) ? full.slice(0, tagsLimit) + '…' : full;
+                tagsEl.dataset.truncated = truncated;
+                tagsEl.textContent = truncated;
+            }
+        });
+    }
+    // Run truncation early with requested limits: command=25, description=20, tags=15
+    applyCharTruncation(25, 20, 15);
+
+    // =============================================================================
     // ROW EXPANSION/COLLAPSE FUNCTIONALITY
     // =============================================================================
     // Allows users to expand table rows to see full command details
@@ -136,7 +180,8 @@ document.addEventListener('DOMContentLoaded', function () {
             // When expanded, the description cell should span multiple columns
             const cmdCell = row.querySelector('.cmd-cell');
             const subCell = row.querySelector('.col-subcmds');
-            const cmdText = cmdCell.querySelector('.truncate-2').textContent; 
+            const cmdEl = cmdCell.querySelector('.truncate-2');
+            const cmdText = (cmdEl && cmdEl.dataset && cmdEl.dataset.full) ? cmdEl.dataset.full : (cmdEl ? cmdEl.textContent : ''); 
             
             if (row.classList.contains('expanded')) {
                 // Hide the original command and subcommand cells
@@ -203,6 +248,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 
                 // Add subtle animation for expansion
                 descCell.style.transition = 'all 0.3s ease';
+
+                // Show full description text (use stored full value if available)
+                const descTextEl = descCell.querySelector('.description-text') || descCell;
+                if (descTextEl && descTextEl.dataset && descTextEl.dataset.full) {
+                    descTextEl.textContent = descTextEl.dataset.full;
+                }
+
                 setTimeout(() => {
                     descCell.style.opacity = '1';
                 }, 50);
@@ -215,6 +267,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 const commandHeader = descCell.querySelector('.command-header');
                 if (commandHeader) {
                     commandHeader.remove();
+                }
+
+                // Restore truncated description when collapsing
+                const descTextEl = descCell.querySelector('.description-text') || descCell;
+                if (descTextEl && descTextEl.dataset && descTextEl.dataset.truncated) {
+                    descTextEl.textContent = descTextEl.dataset.truncated;
                 }
                 
                 // Reset to normal single-column span
@@ -355,6 +413,12 @@ document.addEventListener('DOMContentLoaded', function () {
                         if (commandHeader) {
                             commandHeader.remove();
                         }
+
+                        // Restore truncated description when collapsing via Collapse All
+                        const descTextEl = descCell.querySelector('.description-text') || descCell;
+                        if (descTextEl && descTextEl.dataset && descTextEl.dataset.truncated) {
+                            descTextEl.textContent = descTextEl.dataset.truncated;
+                        }
                         
                         descCell.removeAttribute('colspan');
                         descCell.style.opacity = '0.8';
@@ -374,7 +438,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         if (subCell) subCell.style.display = 'none';
                         
                         // Create command header above description
-                        const cmdText = cmdCell.querySelector('.truncate-2').textContent;
+                        const cmdEl = cmdCell.querySelector('.truncate-2');
+                        const cmdText = (cmdEl && cmdEl.dataset && cmdEl.dataset.full) ? cmdEl.dataset.full : (cmdEl ? cmdEl.textContent : '');
                         let commandHeader = descCell.querySelector('.command-header');
                         if (!commandHeader) {
                             commandHeader = document.createElement('div');
@@ -391,6 +456,12 @@ document.addEventListener('DOMContentLoaded', function () {
                             copyBtn.className = 'btn btn-sm btn-outline-success ms-2 copy-expanded-btn';
                             copyBtn.title = 'Copy command';
                             copyBtn.dataset.command = cmdText;
+
+                            // Also set description to full when expanding via Expand All
+                            const descTextEl = descCell.querySelector('.description-text') || descCell;
+                            if (descTextEl && descTextEl.dataset && descTextEl.dataset.full) {
+                                descTextEl.textContent = descTextEl.dataset.full;
+                            }
                             copyBtn.innerHTML = '<i class="bi bi-clipboard" aria-hidden="true"></i>';
                             copyBtn.addEventListener('click', function(ev){ ev.stopPropagation(); });
                             commandHeader.appendChild(copyBtn);

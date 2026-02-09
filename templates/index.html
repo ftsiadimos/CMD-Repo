@@ -125,7 +125,7 @@ COMMANDS TABLE - Only shown if commands exist
         <th class="col-cmd">
           <i class="bi bi-terminal me-1"></i>Command                  <!-- Command column header -->
         </th>
-        <th class="col-subcmds text-nowrap"><i class="bi bi-list-ul me-1"></i>Sub</th>
+        <th class="col-subcmds"><i class="bi bi-list-ul me-1"></i>Sub</th>
         <th class="col-desc"><i class="bi bi-card-text me-1"></i>Description</th>  <!-- Description header -->
         <th class="col-tags"><i class="bi bi-tags me-1"></i>Tags</th>  <!-- Tags column header -->
         <th class="col-date"><i class="bi bi-calendar me-1"></i>Date</th>          <!-- Creation date header -->
@@ -147,7 +147,7 @@ COMMANDS TABLE - Only shown if commands exist
           <!-- Command Cell - Displays the shell command with monospace font -->
           <td class="cmd-cell">
             <div class="cmd-wrapper" title="{{ cmd.command }}">
-              <span class="truncate-cmd font-monospace">{{ cmd.command }}</span>
+              <span class="truncate-2 font-monospace">{{ cmd.command }}</span>
             </div>
           </td>
 
@@ -164,7 +164,7 @@ COMMANDS TABLE - Only shown if commands exist
 
           <!-- Description Cell - Shows command description with formatting preservation -->
           <td class="desc-cell">
-            <div class="description-text truncate-desc" title="{{ cmd.description or '' }}">{{ cmd.description or "" }}</div>
+            <div class="description-text truncate-2" title="{{ cmd.description or '' }}">{{ cmd.description or "" }}</div>
             {% if cmd.subcommands %}
             <ul class="subcommands-tree small mt-2 mb-0">
               {% for sc in cmd.subcommands %}
@@ -184,7 +184,7 @@ COMMANDS TABLE - Only shown if commands exist
 
           <!-- Tags Cell - Comma-separated tags for categorization -->
           <td class="col-tags">
-            <div class="truncate-tags" title="{{ cmd.tags or '' }}">{{ cmd.tags or "" }}</div>
+            <div class="truncate-1" title="{{ cmd.tags or '' }}">{{ cmd.tags or "" }}</div>
           </td>
 
           <!-- Date Cell - Creation timestamp in readable format -->
