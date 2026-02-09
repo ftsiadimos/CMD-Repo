@@ -10,7 +10,7 @@ from flask import (
     current_app,
     jsonify,
 )
-from .models import db, Command
+from .models import db, Command, Subcommand
 from .forms import CommandForm
 
 web_bp = Blueprint("web", __name__)
@@ -95,6 +95,17 @@ def add():
             description=form.description.data.strip() or None,
             tags=form.tags.data.strip() or None,
         )
+
+        # Add subcommands from the form (if any)
+        sub_cmds = request.form.getlist('subcmd_command[]')
+        sub_descs = request.form.getlist('subcmd_description[]')
+        for i, sc in enumerate(sub_cmds):
+            sc_text = sc.strip()
+            if not sc_text:
+                continue
+            sc_desc = (sub_descs[i].strip() if i < len(sub_descs) else None) or None
+            cmd.subcommands.append(Subcommand(command=sc_text, description=sc_desc))
+
         db.session.add(cmd)
         db.session.commit()
         flash("Command added successfully!", "success")
@@ -110,6 +121,20 @@ def edit(cmd_id):
         cmd.command = form.command.data.strip()
         cmd.description = form.description.data.strip() or None
         cmd.tags = form.tags.data.strip() or None
+
+        # Replace subcommands with submitted list
+        sub_cmds = request.form.getlist('subcmd_command[]')
+        sub_descs = request.form.getlist('subcmd_description[]')
+
+        # Clear existing subcommands and add new ones
+        cmd.subcommands[:] = []
+        for i, sc in enumerate(sub_cmds):
+            sc_text = sc.strip()
+            if not sc_text:
+                continue
+            sc_desc = (sub_descs[i].strip() if i < len(sub_descs) else None) or None
+            cmd.subcommands.append(Subcommand(command=sc_text, description=sc_desc))
+
         db.session.commit()
         flash("Command updated.", "info")
         return redirect(url_for("web.index"))
@@ -199,6 +224,16 @@ def import_json():
                     description=item.get('description', '').strip() if item.get('description') else None,
                     tags=item.get('tags', '').strip() if item.get('tags') else None,
                 )
+
+                # Import subcommands if present
+                subitems = item.get('subcommands') or []
+                for sc in subitems:
+                    sc_cmd = sc.get('command', '').strip()
+                    if not sc_cmd:
+                        continue
+                    sc_desc = sc.get('description', '').strip() if sc.get('description') else None
+                    cmd.subcommands.append(Subcommand(command=sc_cmd, description=sc_desc))
+
                 db.session.add(cmd)
                 imported_count += 1
 

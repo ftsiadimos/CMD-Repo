@@ -45,8 +45,23 @@
             </div>
             <div class="form-text">Optional: Comma-separated tags for easier searching.</div>
           </div>
-          
+
+          <!-- Subcommands Input Section - Add one or more subcommands -->
+          <div class="mb-4">
+            <label class="form-label fw-semibold">Subcommands (optional)</label>
+            <div id="subcommands-list">
+              <div class="input-group mb-2 subcommand-row">
+                <input type="text" name="subcmd_command[]" class="form-control" placeholder="Subcommand (e.g., init, start)" />
+                <input type="text" name="subcmd_description[]" class="form-control ms-2" placeholder="Optional description" />
+                <button type="button" class="btn btn-outline-success ms-2 add-subcommand" title="Add subcommand">+</button>
+                <button type="button" class="btn btn-outline-danger ms-1 remove-subcommand" title="Remove subcommand" style="display:none;">&times;</button>
+              </div>
+            </div>
+            <div class="form-text">Click the <strong>+</strong> button to add more subcommand entries. They will be shown when viewing the expanded command.</div>
+          </div>
+
           <!-- Form Action Buttons - Submit and cancel buttons -->
+          <div class="d-flex gap-2">
           <div class="d-flex gap-2">
             <!-- Submit Button - Saves the new command -->
             <button type="submit" class="btn btn-primary">
@@ -62,4 +77,32 @@
     </div>
   </div>
 </div>
+
+<script>
+// Subcommand row add/remove behavior
+(function () {
+  function bindRow(row) {
+    const addBtn = row.querySelector('.add-subcommand');
+    const remBtn = row.querySelector('.remove-subcommand');
+
+    addBtn.addEventListener('click', function () {
+      const container = document.getElementById('subcommands-list');
+      const newRow = row.cloneNode(true);
+      // Reset inputs
+      newRow.querySelectorAll('input').forEach(i => i.value = '');
+      // Show remove button on clones
+      newRow.querySelector('.remove-subcommand').style.display = '';
+      container.appendChild(newRow);
+      bindRow(newRow);
+    });
+
+    remBtn.addEventListener('click', function () {
+      row.remove();
+    });
+  }
+
+  document.querySelectorAll('.subcommand-row').forEach(bindRow);
+})();
+</script>
+
 {% endblock %}

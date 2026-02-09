@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from .models import db, Command
+from .models import db, Command, Subcommand
 
 api_bp = Blueprint("api", __name__)
 
@@ -15,6 +15,15 @@ def api_add_command():
         description=data.get("description", "").strip() or None,
         tags=data.get("tags", "").strip() or None,
     )
+
+    # Handle optional subcommands list in request JSON
+    subitems = data.get('subcommands') or []
+    for sc in subitems:
+        sc_cmd = sc.get('command', '').strip()
+        if not sc_cmd:
+            continue
+        sc_desc = sc.get('description', '').strip() if sc.get('description') else None
+        cmd.subcommands.append(Subcommand(command=sc_cmd, description=sc_desc))
 
     db.session.add(cmd)
     db.session.commit()
@@ -42,6 +51,7 @@ def api_list_commands():
             "description": c.description,
             "tags": c.tags,
             "created_at": c.created_at.isoformat(),
+            "subcommands": [ {"command": sc.command, "description": sc.description} for sc in c.subcommands ],
         }
         for c in commands
     ]
@@ -60,4 +70,5 @@ def api_get_command(cmd_id):
         "description": cmd.description,
         "tags": cmd.tags,
         "created_at": cmd.created_at.isoformat(),
+        "subcommands": [ {"command": sc.command, "description": sc.description} for sc in cmd.subcommands ],
     }), 200

@@ -125,6 +125,7 @@ COMMANDS TABLE - Only shown if commands exist
         <th class="col-cmd">
           <i class="bi bi-terminal me-1"></i>Command                  <!-- Command column header -->
         </th>
+        <th class="col-subcmds"><i class="bi bi-list-ul me-1"></i>Subcommands</th>
         <th class="col-desc"><i class="bi bi-card-text me-1"></i>Description</th>  <!-- Description header -->
         <th class="col-tags"><i class="bi bi-tags me-1"></i>Tags</th>  <!-- Tags column header -->
         <th class="col-date"><i class="bi bi-calendar me-1"></i>Date</th>          <!-- Creation date header -->
@@ -150,9 +151,35 @@ COMMANDS TABLE - Only shown if commands exist
             </div>
           </td>
 
+          <!-- Subcommands Cell - Shows green tick when subcommands exist (compact) -->
+          <td class="col-subcmds text-center">
+            {% if cmd.subcommands %}
+              <span class="subcmd-presence" title="{{ cmd.subcommands|length }} subcommand{% if cmd.subcommands|length != 1 %}s{% endif %}" aria-label="{{ cmd.subcommands|length }} subcommands">
+                <i class="bi bi-check-circle-fill" aria-hidden="true"></i>
+              </span>
+            {% else %}
+              <div class="text-muted small">—</div>
+            {% endif %}
+          </td>
+
           <!-- Description Cell - Shows command description with formatting preservation -->
           <td class="desc-cell">
             <div class="description-text truncate-2" title="{{ cmd.description or '' }}">{{ cmd.description or "" }}</div>
+            {% if cmd.subcommands %}
+            <ul class="subcommands-tree small mt-2 mb-0">
+              {% for sc in cmd.subcommands %}
+                <li class="subcmd-item">
+                  <span class="subcmd-command font-monospace">{{ sc.command }}</span>
+                  {% if sc.description %}
+                    <span class="subcmd-desc"> — {{ sc.description }}</span>
+                  {% endif %}
+                  <button type="button" class="btn btn-sm btn-outline-success ms-auto copy-sub-btn" data-command="{{ sc.command|e }}" title="Copy subcommand">
+                    <i class="bi bi-clipboard" aria-hidden="true"></i>
+                  </button>
+                </li>
+              {% endfor %}
+            </ul>
+            {% endif %}
           </td>
 
           <!-- Tags Cell - Comma-separated tags for categorization -->

@@ -687,15 +687,100 @@ tr.expanded td:not(.desc-cell):not(:first-child) {
 }
 
 /* ========================================
+COMMAND HEADER TINT - subtle green overlay when expanded
+======================================== */
+.command-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  /* add a very subtle green tint behind the terminal header background */
+  background: linear-gradient(0deg, rgba(0,204,0,0.04), rgba(0,204,0,0.02)), var(--terminal-bg-header);
+} 
+
+/* ========================================
+SUBCOMMANDS TREE - Tree-style list inside expanded description
+======================================== */
+.subcommands-tree {
+  list-style: none;
+  margin: 0.5rem 0 0 0;
+  padding-left: 1rem;
+  display: none; /* hidden until row is expanded */
+  border-left: 2px solid rgba(0,128,0,0.08);
+}
+
+tr.expanded .subcommands-tree { display: block; }
+
+.subcommands-tree .subcmd-item {
+  position: relative;
+  padding: 0.45rem 0.65rem;
+  margin: 0.35rem 0 0 0.5rem;
+  border-radius: 6px;
+  background: #000; /* black background for subcommands */
+  border: 1px solid rgba(255,255,255,0.04);
+  color: #e6ffe6;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.subcommands-tree .subcmd-item::before {
+  content: '';
+  position: absolute;
+  left: -1.05rem;
+  top: 50%;
+  width: 0.9rem;
+  height: 2px;
+  background: rgba(102,255,102,0.12); /* subtle green connector */
+  transform: translateY(-50%);
+  border-radius: 1px;
+}
+
+.subcommands-tree .subcmd-command {
+  color: var(--terminal-green-light);
+  font-family: 'Courier New', 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace;
+}
+
+.subcommands-tree .subcmd-desc {
+  color: rgba(230,230,230,0.7);
+  font-size: 0.92rem;
+}
+
+/* Subcommand presence tick on main table */
+.col-subcmds { text-align: center; }
+.col-subcmds .subcmd-presence .bi-check-circle-fill {
+  color: var(--terminal-green-light);
+  font-size: 1.2rem;
+  text-shadow: 0 0 6px rgba(102,255,102,0.18);
+}
+
+/* ========================================
 COMMAND HEADER - Displayed above description when expanded
 ======================================== */
 .command-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
   background: var(--terminal-bg-header);
   border: 2px solid var(--terminal-green);
   border-bottom: none;
   margin-bottom: 0;
   padding: 1rem;
   box-shadow: 0 0 15px rgba(0, 255, 0, 0.3);
+}
+
+.command-header .command-text {
+  flex: 1 1 auto;
+  min-width: 0; /* allow truncation when space is limited */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.command-header .copy-expanded-btn {
+  margin-left: 0.5rem;
+  flex: 0 0 auto;
 }
 
 /* Terminal prompt before command */
@@ -1137,6 +1222,27 @@ Overrides core CSS variables to provide a light, low-contrast palette
 
   --gradient-primary: linear-gradient(135deg, #66b892 0%, #2f6f56 100%);
   --transition-speed: 0.25s;
+}
+
+/* Theme overrides for subcommands tree in soft (light) theme
+   Make subcommand items match the main command color and background */
+.theme-soft .subcommands-tree .subcmd-item {
+  background: var(--terminal-bg-header);         /* same background as the command header */
+  border: 1px solid var(--border-green);         /* soft border matching theme */
+  color: var(--text-primary);                    /* same text color as main command */
+  box-shadow: none;                              /* remove black-themed glow */
+}
+
+.theme-soft .subcommands-tree .subcmd-item::before {
+  background: rgba(47,111,86,0.12);              /* soft green connector */
+}
+
+.theme-soft .subcommands-tree .subcmd-command {
+  color: var(--terminal-green);                  /* match main command color */
+}
+
+.theme-soft .subcommands-tree .subcmd-desc {
+  color: var(--text-secondary);                  /* softer description color */
 }
 
 /* Ensure navbar and footer look good on the soft theme */

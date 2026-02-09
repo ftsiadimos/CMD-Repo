@@ -135,26 +135,70 @@ document.addEventListener('DOMContentLoaded', function () {
             // Dynamically adjust table cell spanning for expanded layout
             // When expanded, the description cell should span multiple columns
             const cmdCell = row.querySelector('.cmd-cell');
-            const cmdText = cmdCell.querySelector('.truncate-2').textContent;
+            const subCell = row.querySelector('.col-subcmds');
+            const cmdText = cmdCell.querySelector('.truncate-2').textContent; 
             
             if (row.classList.contains('expanded')) {
-                // Hide the original command cell
+                // Hide the original command and subcommand cells
                 cmdCell.style.display = 'none';
+                if (subCell) subCell.style.display = 'none';
                 
-                // Expand description cell to span 6 columns (full width including command column)
-                descCell.setAttribute('colspan', '6');
+                // Expand description cell to span 7 columns (full width including command and subcommands columns)
+                descCell.setAttribute('colspan', '7');
                 
                 // Create command header above description if it doesn't exist
                 let commandHeader = descCell.querySelector('.command-header');
                 if (!commandHeader) {
                     commandHeader = document.createElement('div');
                     commandHeader.className = 'command-header';
-                    commandHeader.innerHTML = `<span class="command-text typing"></span>`;
+
+                    // Create command text span (typing effect will populate it)
+                    const commandSpan = document.createElement('span');
+                    commandSpan.className = 'command-text typing';
+                    commandHeader.appendChild(commandSpan);
+
+                    // Create copy button for the main command in expanded header
+                    const copyBtn = document.createElement('button');
+                    copyBtn.type = 'button';
+                    copyBtn.className = 'btn btn-sm btn-outline-success ms-2 copy-expanded-btn';
+                    copyBtn.title = 'Copy command';
+                    copyBtn.setAttribute('aria-label', 'Copy command');
+                    copyBtn.dataset.command = cmdText;
+                    copyBtn.innerHTML = '<i class="bi bi-clipboard" aria-hidden="true"></i>';
+                    // Prevent clicks from bubbling to row (avoid re-triggering expand)
+                    copyBtn.addEventListener('click', function(ev){ ev.stopPropagation(); });
+
+                    commandHeader.appendChild(copyBtn);
                     descCell.insertBefore(commandHeader, descCell.firstChild);
-                    
+
                     // Typing effect - type out command character by character
-                    const commandSpan = commandHeader.querySelector('.command-text');
                     typeCommand(commandSpan, cmdText, 30); // 30ms per character
+
+                    // Attach copy handler directly so dynamically created button works
+                    copyBtn.addEventListener('click', function (ev) {
+                        ev.stopPropagation();
+                        const icon = copyBtn.querySelector('i');
+                        const text = copyBtn.dataset.command || '';
+                        copyText(text).then(function () {
+                            icon.className = 'bi bi-check-lg';
+                            copyBtn.classList.remove('btn-outline-success');
+                            copyBtn.classList.add('btn-success');
+                            setTimeout(function () {
+                                icon.className = 'bi bi-clipboard';
+                                copyBtn.classList.remove('btn-success');
+                                copyBtn.classList.add('btn-outline-success');
+                            }, 1500);
+                        }).catch(function () {
+                            icon.className = 'bi bi-x-lg';
+                            copyBtn.classList.remove('btn-outline-success');
+                            copyBtn.classList.add('btn-danger');
+                            setTimeout(function () {
+                                icon.className = 'bi bi-clipboard';
+                                copyBtn.classList.remove('btn-danger');
+                                copyBtn.classList.add('btn-outline-success');
+                            }, 1500);
+                        });
+                    });
                 }
                 
                 // Add subtle animation for expansion
@@ -163,8 +207,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     descCell.style.opacity = '1';
                 }, 50);
             } else {
-                // Show the original command cell
+                // Show the original command and subcommand cells
                 cmdCell.style.display = '';
+                if (subCell) subCell.style.display = ''; 
                 
                 // Remove command header
                 const commandHeader = descCell.querySelector('.command-header');
@@ -234,6 +279,35 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
+    // Additional copy handlers for expanded header and subcommand buttons
+    document.querySelectorAll('.copy-sub-btn').forEach(function (btn) {
+        btn.addEventListener('click', function (ev) {
+            ev.stopPropagation();
+            var text = btn.dataset.command || '';
+            var icon = btn.querySelector('i');
+
+            copyText(text).then(function () {
+                icon.className = 'bi bi-check-lg';
+                btn.classList.remove('btn-outline-success');
+                btn.classList.add('btn-success');
+                setTimeout(function () {
+                    icon.className = 'bi bi-clipboard';
+                    btn.classList.remove('btn-success');
+                    btn.classList.add('btn-outline-success');
+                }, 1500);
+            }).catch(function () {
+                icon.className = 'bi bi-x-lg';
+                btn.classList.remove('btn-outline-success');
+                btn.classList.add('btn-danger');
+                setTimeout(function () {
+                    icon.className = 'bi bi-clipboard';
+                    btn.classList.remove('btn-danger');
+                    btn.classList.add('btn-outline-success');
+                }, 1500);
+            });
+        });
+    });
+
     // =============================================================================
     // EXPAND/COLLAPSE ALL ROWS FUNCTIONALITY
     // =============================================================================
@@ -271,8 +345,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (isRowExpanded) {
                         row.classList.remove('expanded');
                         
-                        // Show the original command cell
+                        // Show the original command and subcommand cells
                         cmdCell.style.display = '';
+                        const subCell = row.querySelector('.col-subcmds');
+                        if (subCell) subCell.style.display = ''; 
                         
                         // Remove command header
                         const commandHeader = descCell.querySelector('.command-header');
@@ -292,8 +368,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (!isRowExpanded) {
                         row.classList.add('expanded');
                         
-                        // Hide the original command cell
+                        // Hide the original command and subcommand cells
                         cmdCell.style.display = 'none';
+                        const subCell = row.querySelector('.col-subcmds');
+                        if (subCell) subCell.style.display = 'none';
                         
                         // Create command header above description
                         const cmdText = cmdCell.querySelector('.truncate-2').textContent;
@@ -301,11 +379,52 @@ document.addEventListener('DOMContentLoaded', function () {
                         if (!commandHeader) {
                             commandHeader = document.createElement('div');
                             commandHeader.className = 'command-header';
-                            commandHeader.innerHTML = `<span class="command-text">${cmdText}</span>`;
+
+                            const commandSpan = document.createElement('span');
+                            commandSpan.className = 'command-text';
+                            commandSpan.textContent = cmdText;
+                            commandHeader.appendChild(commandSpan);
+
+                            // copy button for expanded header (no typing here)
+                            const copyBtn = document.createElement('button');
+                            copyBtn.type = 'button';
+                            copyBtn.className = 'btn btn-sm btn-outline-success ms-2 copy-expanded-btn';
+                            copyBtn.title = 'Copy command';
+                            copyBtn.dataset.command = cmdText;
+                            copyBtn.innerHTML = '<i class="bi bi-clipboard" aria-hidden="true"></i>';
+                            copyBtn.addEventListener('click', function(ev){ ev.stopPropagation(); });
+                            commandHeader.appendChild(copyBtn);
+
                             descCell.insertBefore(commandHeader, descCell.firstChild);
+
+                            // attach handler
+                            copyBtn.addEventListener('click', function (ev) {
+                                ev.stopPropagation();
+                                const icon = copyBtn.querySelector('i');
+                                const text = copyBtn.dataset.command || '';
+                                copyText(text).then(function () {
+                                    icon.className = 'bi bi-check-lg';
+                                    copyBtn.classList.remove('btn-outline-success');
+                                    copyBtn.classList.add('btn-success');
+                                    setTimeout(function () {
+                                        icon.className = 'bi bi-clipboard';
+                                        copyBtn.classList.remove('btn-success');
+                                        copyBtn.classList.add('btn-outline-success');
+                                    }, 1500);
+                                }).catch(function () {
+                                    icon.className = 'bi bi-x-lg';
+                                    copyBtn.classList.remove('btn-outline-success');
+                                    copyBtn.classList.add('btn-danger');
+                                    setTimeout(function () {
+                                        icon.className = 'bi bi-clipboard';
+                                        copyBtn.classList.remove('btn-danger');
+                                        copyBtn.classList.add('btn-outline-success');
+                                    }, 1500);
+                                });
+                            });
                         }
                         
-                        descCell.setAttribute('colspan', '6');
+                        descCell.setAttribute('colspan', '7');
                         descCell.style.transition = 'all 0.3s ease';
                         setTimeout(() => {
                             descCell.style.opacity = '1';
