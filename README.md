@@ -1,7 +1,7 @@
 # Command-CLI
 
 [![Docker](https://img.shields.io/badge/docker-ready-blue?logo=docker)](https://hub.docker.com/r/ftsiadimos/command-cli-image)
-[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![License](https://img.shields.io/badge/license-GPT--3-blue)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.10+-yellow?logo=python)](https://python.org)
 
 > A lightweight Flask application for storing, searching, and managing your shell commands with both a web UI and CLI client.
@@ -239,7 +239,7 @@ The CLI stores its configuration in `~/.config/command-cli/config.json`:
 
 ## 📝 License
 
-This project is licensed under the MIT License.
+This project is licensed under the GPT-3 License.
 
 ---
 
