@@ -173,6 +173,9 @@ def export_json():
             "description": cmd.description,
             "tags": cmd.tags,
             "created_at": cmd.created_at.isoformat() if cmd.created_at else None,
+            "subcommands": [
+                {"command": sc.command, "description": sc.description} for sc in cmd.subcommands
+            ],
         }
         for cmd in commands
     ]

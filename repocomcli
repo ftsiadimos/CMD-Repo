@@ -633,14 +633,28 @@ cmd_import() {
             tags=$(echo "$item" | jq -r '.tags // ""')
             
             [[ -z "$cmd" ]] && { ((failed++)) || true; continue; }
-            
+
+            # Preserve subcommands from the exported JSON (if any)
+            local sub_json
+            sub_json=$(echo "$item" | jq -c '.subcommands // []')
+
             local json
-            json=$(jq -n \
-                --arg cmd "$cmd" \
-                --arg desc "$desc" \
-                --arg tags "$tags" \
-                '{command: $cmd, description: $desc, tags: $tags}')
-            
+            if [[ "$sub_json" != "[]" && -n "$sub_json" ]]; then
+                # Include subcommands in the POST payload
+                json=$(jq -n \
+                    --arg cmd "$cmd" \
+                    --arg desc "$desc" \
+                    --arg tags "$tags" \
+                    --argjson subs "$sub_json" \
+                    '{command: $cmd, description: $desc, tags: $tags, subcommands: $subs}')
+            else
+                json=$(jq -n \
+                    --arg cmd "$cmd" \
+                    --arg desc "$desc" \
+                    --arg tags "$tags" \
+                    '{command: $cmd, description: $desc, tags: $tags}')
+            fi
+
             local result http_code
             result=$(api_request "POST" "" "$json")
             http_code=$(head -n1 <<< "$result")

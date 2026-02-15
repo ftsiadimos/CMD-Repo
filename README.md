@@ -164,8 +164,23 @@ curl "http://localhost:5000/api/commands?search=docker"
 ```bash
 curl http://localhost:5000/export-json -o backup.json
 ```
+Exported JSON now includes `subcommands` (if present). Example exported item:
 
----
+```json
+{
+  "id": 42,
+  "command": "git",
+  "description": "version control",
+  "tags": "git",
+  "created_at": "2026-02-14T12:00:00",
+  "subcommands": [
+    { "command": "clone --recursive", "description": "Clone recursively" },
+    { "command": "commit -m", "description": "Commit with message" }
+  ]
+}
+```
+
+You can re-import that file (web UI or CLI) and `subcommands` will be preserved.---
 
 ## 🐳 Docker Compose
 
