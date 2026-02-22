@@ -1258,6 +1258,22 @@ Overrides core CSS variables to provide a light, low-contrast palette
   border-top: 1px solid var(--border-green);
 }
 
+/* Footer link color helper used across themes */
+.footer-developer-link {
+  color: var(--text-white); /* default dark-theme color */
+}
+
+/* Override when soft/light theme is active so link remains readable */
+.theme-soft .footer-developer-link {
+  color: var(--text-primary);
+}
+
+.theme-soft .footer-developer-link:hover,
+.theme-soft .footer-developer-link:focus {
+  color: var(--terminal-green);
+}
+
+
 /* Slightly reduce strong glows for soft theme */
 .theme-soft .card:hover {
   box-shadow: 0 0 10px rgba(47,111,86,0.08);
