@@ -416,6 +416,10 @@ TEXT TRUNCATION UTILITIES
   display: block;
   overflow: hidden;
   text-overflow: ellipsis;
+  /* allow long words to wrap instead of overflowing the cell */
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-all;
 }
 /* Single line truncation */
 .truncate-1 { white-space: nowrap; }
@@ -654,6 +658,16 @@ COMMAND CELL STYLING - Monospace font for code readability
 .cmd-cell { 
   font-family: 'Courier New', 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace;
   background: transparent !important;
+  /* allow very long commands to wrap within the cell */
+  word-break: break-all;
+  overflow-wrap: break-word;
+}
+
+/* ensure descriptions also wrap as needed */
+.desc-cell,
+.desc-cell .description-text {
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .cmd-cell .truncate-2 {
@@ -662,10 +676,12 @@ COMMAND CELL STYLING - Monospace font for code readability
   text-shadow: 0 0 1px var(--terminal-green);
 }
 
-/* Command wrapper - keeps $ and command on same line */
+/* Command wrapper - keeps $ and command on same line;
+   allow wrapping when the command is too long for one line */
 .cmd-wrapper {
   display: flex;
   align-items: flex-start;
+  flex-wrap: wrap;
 }
 
 /* Terminal prompt prefix styling */
@@ -772,10 +788,13 @@ COMMAND HEADER - Displayed above description when expanded
 
 .command-header .command-text {
   flex: 1 1 auto;
-  min-width: 0; /* allow truncation when space is limited */
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  min-width: 0; /* allow flex children to shrink properly */
+  /* let long commands wrap instead of forcing a single line */
+  overflow: visible;
+  text-overflow: unset;
+  white-space: pre-wrap;
+  word-break: break-all;
+  overflow-wrap: break-word;
 }
 
 .command-header .copy-expanded-btn {
