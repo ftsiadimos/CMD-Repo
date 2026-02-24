@@ -1,6 +1,7 @@
 # Command-CLI
 
 [![Docker](https://img.shields.io/badge/docker-ready-blue?logo=docker)](https://hub.docker.com/r/ftsiadimos/command-cli-image)
+[![GHCR](https://img.shields.io/badge/ghcr-ready-blue?logo=github)](https://github.com/users/ftsiadimos/packages/container/command-cli-image)
 [![License](https://img.shields.io/badge/license-GPT--3-blue)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.10+-yellow?logo=python)](https://python.org)
 
@@ -28,6 +29,11 @@
 
 ```bash
 # Pull and run with persistent storage
+# you can use the Docker Hub image:
+#   ftsiadimos/command-cli-image:latest
+# or the GitHub Container Registry mirror:
+#   ghcr.io/ftsiadimos/command-cli-image:latest
+
 docker run -d \
   --name command-cli \
   --restart unless-stopped \
@@ -37,6 +43,27 @@ docker run -d \
 ```
 
 Open http://localhost:5001 in your browser.
+
+### Docker Compose
+
+```yaml
+version: '3.8'
+
+services:
+  command-cli:
+    # you may pull from Docker Hub or GHCR; they are kept in sync
+    image: ftsiadimos/command-cli-image:latest
+    # alternatively: ghcr.io/ftsiadimos/command-cli-image:latest
+    container_name: command-cli
+    restart: unless-stopped
+    ports:
+      - "5001:5001"
+    volumes:
+      - command-cli-data:/app/instance
+
+volumes:
+  command-cli-data:
+```
 
 ### Option 2: Manual Installation
 
@@ -182,24 +209,7 @@ Exported JSON now includes `subcommands` (if present). Example exported item:
 
 You can re-import that file (web UI or CLI) and `subcommands` will be preserved.---
 
-## 🐳 Docker Compose
 
-```yaml
-version: '3.8'
-
-services:
-  command-cli:
-    image: ftsiadimos/command-cli-image:latest
-    container_name: command-cli
-    restart: unless-stopped
-    ports:
-      - "5001:5001"
-    volumes:
-      - command-cli-data:/app/instance
-
-volumes:
-  command-cli-data:
-```
 
 ---
 
