@@ -978,7 +978,7 @@ TABLE BODY STYLING
 .cmd-table { width: 100%; }
 .cmd-table .col-arrow { width: 30px; }
 .cmd-table .col-cmd { min-width: 200px; }
-.cmd-table .col-desc { min-width: 180px; }
+.cmd-table .col-desc { min-width: 300px; }
 .cmd-table .col-tags { min-width: 100px; }
 .cmd-table .col-date { width: 130px; white-space: nowrap; }
 /* Actions column: keep compact and right-aligned */

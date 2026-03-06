@@ -136,8 +136,8 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     }
-    // Run truncation early with requested limits: command=25, description=20, tags=15
-    applyCharTruncation(25, 20, 15);
+    // Run truncation early with requested limits: command=25, description=80, tags=15
+    applyCharTruncation(25, 80, 15);
 
     // =============================================================================
     // ROW EXPANSION/COLLAPSE FUNCTIONALITY

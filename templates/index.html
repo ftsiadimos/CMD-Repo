@@ -164,7 +164,7 @@ COMMANDS TABLE - Only shown if commands exist
 
           <!-- Description Cell - Shows command description with formatting preservation -->
           <td class="desc-cell">
-            <div class="description-text truncate-2" title="{{ cmd.description or '' }}">{{ cmd.description or "" }}</div>
+            <div class="description-text truncate-3" title="{{ cmd.description or '' }}">{{ cmd.description or "" }}</div>
             {% if cmd.subcommands %}
             <ul class="subcommands-tree small mt-2 mb-0">
               {% for sc in cmd.subcommands %}
