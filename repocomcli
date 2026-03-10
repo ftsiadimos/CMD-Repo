@@ -5,7 +5,7 @@
 #
 # Usage:
 #   repocomcli add "command" [-d description] [-t tags] [--sub "subcommand|description"]
-#   repocomcli list [-s search] [-n limit]
+#   repocomcli list [-s search] [-n limit]   # search matches commands, descriptions, tags, and subcommands
 #   repocomcli show <id>
 #   repocomcli copy <id>
 #   repocomcli export <file.json>

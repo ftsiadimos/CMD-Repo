@@ -35,10 +35,14 @@ def api_add_command():
 def api_list_commands():
     search = request.args.get("search", "").strip()
     if search:
+        # include subcommand text/description in search
+        s = f"%{search}%"
         q = (
-            Command.command.ilike(f"%{search}%")
-            | Command.description.ilike(f"%{search}%")
-            | Command.tags.ilike(f"%{search}%")
+            Command.command.ilike(s)
+            | Command.description.ilike(s)
+            | Command.tags.ilike(s)
+            | Command.subcommands.any(Subcommand.command.ilike(s))
+            | Command.subcommands.any(Subcommand.description.ilike(s))
         )
         commands = Command.query.filter(q).order_by(Command.created_at.desc()).all()
     else:

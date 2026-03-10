@@ -32,11 +32,14 @@ def index():
 
     query = Command.query
     if search:
+        # match search term in command, description, tags, or any subcommand
         s = f"%{search}%"
         query = query.filter(
             Command.command.ilike(s)
             | Command.description.ilike(s)
             | Command.tags.ilike(s)
+            | Command.subcommands.any(Subcommand.command.ilike(s))
+            | Command.subcommands.any(Subcommand.description.ilike(s))
         )
 
     allowed_sorts = {

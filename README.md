@@ -15,7 +15,7 @@
 
 - 🌐 **Web Interface** — Clean Bootstrap 5 UI with search, pagination, and mobile support
 - 💻 **CLI Client** — Pure Bash client for terminal workflows (`repocomcli`)
-- 🔍 **Search** — Full-text search across commands, descriptions, and tags
+- 🔍 **Search** — Full-text search across commands, descriptions, tags, and even subcommand text/descriptions
 - 📋 **Copy to Clipboard** — One-click copy from web or CLI
 - 📤 **Export/Import** — Backup and restore your commands as JSON
 - 🐳 **Docker Ready** — Easy deployment with persistent storage
@@ -161,7 +161,7 @@ repocomcli config set myserver.local --port 5001
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | `GET` | `/api/commands` | List all commands |
-| `GET` | `/api/commands?search=<query>` | Search commands |
+| `GET` | `/api/commands?search=<query>` | Search commands (also matches subcommands) |
 | `POST` | `/api/commands` | Add a new command |
 | `GET` | `/export-json` | Export all commands as JSON |
 | `POST` | `/import-json` | Import commands from JSON |
