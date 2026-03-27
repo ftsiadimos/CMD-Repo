@@ -1,13 +1,16 @@
 # Command-CLI
 
-[![Docker](https://img.shields.io/badge/docker-ready-blue?logo=docker)](https://hub.docker.com/r/ftsiadimos/command-cli-image)
-[![GHCR](https://img.shields.io/badge/ghcr-ready-blue?logo=github)](https://github.com/users/ftsiadimos/packages/container/command-cli-image)
-[![License](https://img.shields.io/badge/license-GPT--3-blue)](LICENSE)
-[![Python](https://img.shields.io/badge/python-3.10+-yellow?logo=python)](https://python.org)
+<p align="center">
+<a href="https://hub.docker.com/r/ftsiadimos/command-cli-image"><img src="https://img.shields.io/badge/docker-ready-blue?logo=docker" alt="Docker"></a>
+<a href="https://github.com/users/ftsiadimos/packages/container/command-cli-image"><img src="https://img.shields.io/badge/ghcr-ready-blue?logo=github" alt="GHCR"></a>
+<a href="LICENSE"><img src="https://img.shields.io/badge/license-GPT--3-blue" alt="License"></a>
+<a href="https://python.org"><img src="https://img.shields.io/badge/python-3.10+-yellow?logo=python" alt="Python"></a>
+<a href="https://hub.docker.com/r/ftsiadimos/command-cli-image"><img src="https://img.shields.io/docker/pulls/ftsiadimos/command-cli-image?style=flat-square&logo=docker" alt="Docker Pulls"></a>
+</p>
 
 > A lightweight Flask application for storing, searching, and managing your shell commands with both a web UI and CLI client.
 
-![Command-CLI UI](mis/image1.png)
+![Command-CLI UI](mis/image1.webp)
 
 ---
 
