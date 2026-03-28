@@ -168,6 +168,7 @@ repocomcli config set myserver.local --port 5001
 | `POST` | `/api/commands` | Add a new command |
 | `GET` | `/export-json` | Export all commands as JSON |
 | `POST` | `/import-json` | Import commands from JSON |
+| `GET` | `/api/total` | Total Commands |
 
 ### Examples
 

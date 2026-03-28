@@ -62,6 +62,10 @@ def api_list_commands():
 
     return jsonify(result), 200
 
+@api_bp.route("/api/total", methods=["GET"])
+def api_total_commands():
+    total = Command.query.count()
+    return jsonify({"total": total}), 200
 
 @api_bp.route("/api/commands/<int:cmd_id>", methods=["GET"])
 def api_get_command(cmd_id):
