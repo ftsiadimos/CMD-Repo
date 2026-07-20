@@ -3,8 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Command-CLI</title>
+  <title>Command-CLI — Store, Search & Manage Shell Commands</title>
+  <meta name="description" content="A lightweight Flask application for storing, searching, and managing your shell commands with both a web UI and CLI client." />
   <style>
+    *, *::before, *::after { box-sizing: border-box; }
     body {
       margin: 0;
       font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -12,35 +14,86 @@
       color: #e2e8f0;
       min-height: 100vh;
       display: flex;
+      flex-direction: column;
       align-items: center;
-      justify-content: center;
-      padding: 2rem;
+      padding: 2rem 1.5rem;
     }
     .container {
-      max-width: 720px;
+      max-width: 800px;
       width: 100%;
       text-align: center;
     }
     h1 {
       font-size: clamp(2rem, 5vw, 3.5rem);
-      margin-bottom: 0.5rem;
+      margin: 0 0 0.5rem;
+      background: linear-gradient(135deg, #60a5fa, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
-    p {
-      line-height: 1.7;
+    .subtitle {
+      font-size: 1.15rem;
+      color: #94a3b8;
+      margin-bottom: 2rem;
+    }
+    .badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      justify-content: center;
+      margin-bottom: 2rem;
+    }
+    .badges img {
+      height: 22px;
+    }
+    .section {
+      text-align: left;
+      margin: 2rem 0;
+    }
+    .section h2 {
+      font-size: 1.4rem;
+      margin: 0 0 1rem;
+      color: #60a5fa;
+    }
+    .section p, .section li {
+      line-height: 1.75;
       color: #cbd5e1;
-      margin-bottom: 1.5rem;
+    }
+    .section ul {
+      padding-left: 1.5rem;
+      margin: 0;
+    }
+    .section li { margin-bottom: 0.4rem; }
+    .section code {
+      background: #1e293b;
+      padding: 0.15em 0.45em;
+      border-radius: 4px;
+      font-size: 0.92em;
+    }
+    pre {
+      background: #1e293b;
+      padding: 1rem 1.2rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      text-align: left;
+      margin: 0.8rem 0;
+    }
+    pre code {
+      background: none;
+      padding: 0;
+      font-size: 0.88rem;
     }
     .buttons {
       display: flex;
       flex-wrap: wrap;
       gap: 1rem;
       justify-content: center;
+      margin: 2rem 0;
     }
     .button {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      padding: 0.9rem 1.4rem;
+      padding: 0.85rem 1.5rem;
       border-radius: 9999px;
       background: #2563eb;
       color: #fff;
@@ -52,21 +105,88 @@
       transform: translateY(-2px);
       background: #1d4ed8;
     }
+    .button.outline {
+      background: transparent;
+      border: 2px solid #3b82f6;
+    }
+    .button.outline:hover {
+      background: #1e3a5f;
+    }
     .note {
       margin-top: 2rem;
-      font-size: 0.95rem;
-      color: #94a3b8;
+      font-size: 0.9rem;
+      color: #64748b;
     }
+    .footer {
+      margin-top: 3rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid #1e293b;
+      font-size: 0.85rem;
+      color: #475569;
+    }
+    .footer a { color: #60a5fa; text-decoration: none; }
+    .footer a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Command-CLI</h1>
-    <p>Welcome to the GitHub Pages preview for Command-CLI. This site is served from the repository's <code>docs/</code> folder.</p>
+    <p class="subtitle">Store, search &amp; manage your shell commands — via web UI or CLI.</p>
+
+    <div class="badges">
+      <a href="https://hub.docker.com/r/ftsiadimos/command-cli-image"><img src="https://img.shields.io/badge/docker-ready-blue?logo=docker" alt="Docker" /></a>
+      <a href="https://github.com/users/ftsiadimos/packages/container/command-cli-image"><img src="https://img.shields.io/badge/ghcr-ready-blue?logo=github" alt="GHCR" /></a>
+      <a href="https://github.com/ftsiadimos/CMD-Repo/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-green" alt="License" /></a>
+      <a href="https://python.org"><img src="https://img.shields.io/badge/python-3.10+-yellow?logo=python" alt="Python" /></a>
+    </div>
+
     <div class="buttons">
       <a class="button" href="https://github.com/ftsiadimos/CMD-Repo" target="_blank" rel="noopener">GitHub Repository</a>
+      <a class="button outline" href="https://hub.docker.com/r/ftsiadimos/command-cli-image" target="_blank" rel="noopener">Docker Hub</a>
     </div>
-    <p class="note">To publish this page, enable GitHub Pages in the repository settings and select the <code>docs/</code> folder as the publishing source.</p>
+
+    <div class="section">
+      <h2>✨ Features</h2>
+      <ul>
+        <li><strong>Web Interface</strong> — Clean Bootstrap 5 UI with search, pagination, and mobile support</li>
+        <li><strong>CLI Client</strong> — Pure Bash client for terminal workflows (<code>repocomcli</code>)</li>
+        <li><strong>Full-text Search</strong> — Search across commands, descriptions, tags, and subcommand text</li>
+        <li><strong>Copy to Clipboard</strong> — One-click copy from web or CLI</li>
+        <li><strong>Export / Import</strong> — Backup and restore your commands as JSON</li>
+        <li><strong>Docker Ready</strong> — Easy deployment with persistent storage</li>
+        <li><strong>Tagging</strong> — Organize commands with comma-separated tags</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2>🐳 Quick Start (Docker)</h2>
+      <pre><code>docker run -d \
+  --name command-cli \
+  --restart unless-stopped \
+  -p 5001:5001 \
+  -v command-cli-data:/app/instance \
+  ftsiadimos/command-cli-image:latest</code></pre>
+      <p>Open <a href="http://localhost:5001" style="color:#60a5fa;">http://localhost:5001</a> in your browser.</p>
+    </div>
+
+    <div class="section">
+      <h2>🖥️ CLI Client</h2>
+      <p>Use <code>repocomcli</code> to manage commands directly from the terminal:</p>
+      <pre><code># List all commands
+repocomcli list
+
+# Search commands
+repocomcli search docker
+
+# Add a new command
+repocomcli add "git push" -d "Push to remote" -t git</code></pre>
+    </div>
+
+    <p class="note">This page is served from the repository's <code>docs/</code> folder via GitHub Pages.</p>
+
+    <div class="footer">
+      Built by <a href="https://github.com/ftsiadimos" target="_blank" rel="noopener">ftsiadimos</a> &middot; <a href="https://github.com/ftsiadimos/CMD-Repo" target="_blank" rel="noopener">GitHub</a> &middot; <a href="https://hub.docker.com/r/ftsiadimos/command-cli-image" target="_blank" rel="noopener">Docker Hub</a>
+    </div>
   </div>
 </body>
 </html>
